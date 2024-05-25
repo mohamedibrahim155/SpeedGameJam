@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 public class PlayerInputService : MonoBehaviour
 {
+    public static Action OnJumpPressed;
+
     private PlayerControls playerControls;
     private Vector2 moveVector;
 
@@ -23,6 +26,7 @@ public class PlayerInputService : MonoBehaviour
         playerControls.Player.Move.performed += mvoeVector => InputRead();
 
         playerControls.Player.Jump.Enable();
+        playerControls.Player.Jump.performed += jumpPressed => OnJumpPressed?.Invoke();
     }
 
 
@@ -44,6 +48,8 @@ public class PlayerInputService : MonoBehaviour
         m_Horizontal = moveVector.x;
         m_Vertical = moveVector.y;
     }
+
+
 }
 
     
