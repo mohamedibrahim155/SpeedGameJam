@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody playerRigidbody;
    [SerializeField] private bool isGrounded;
 
-    private Vector2 movementInputs;
+    private Vector3 moveDirection;
     private void Awake()
     {
         PlayerInputService.OnJumpPressed += PlayerJump;
@@ -42,16 +42,13 @@ public class PlayerController : MonoBehaviour
 
     void HandleInput()
     {
-        movementInputs = new Vector2(m_PlayerInputService.m_Horizontal, m_PlayerInputService.m_Vertical).normalized * m_PlayerConfig.m_Speed *Time.deltaTime;
+        moveDirection = new Vector3(m_PlayerInputService.m_Horizontal,0, m_PlayerInputService.m_Vertical);
 
     }
     void HandleMovement()
     {
-        Vector3  currentVelocity = playerRigidbody.velocity;
-
-        currentVelocity.x = movementInputs.x;
-        currentVelocity.z = movementInputs.y;
-
+        Vector3  currentVelocity = moveDirection.x * playerTansfom.right + moveDirection.z * playerTansfom.forward;
+        currentVelocity.y = playerRigidbody.velocity.y;
         playerRigidbody.velocity = currentVelocity;
     }
 
@@ -78,5 +75,6 @@ public class PlayerController : MonoBehaviour
     
         Gizmos.DrawLine(m_PlayerView.m_GroundCheckTransform.position, m_PlayerView.m_GroundCheckTransform.position + Vector3.down * m_PlayerConfig.m_GroundCheckDistance);
     }
+
 
 }
