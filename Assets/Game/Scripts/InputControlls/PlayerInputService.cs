@@ -5,7 +5,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class PlayerInputService : MonoBehaviour
 {
-    public static Action OnJumpPressed;
+    public static event  Action OnJumpPressed;
+    public static event  Action OnJumpReleased;
+    public static event Action OnJumpHold;
 
     private PlayerControls playerControls;
     private Vector2 moveVector;
@@ -27,6 +29,10 @@ public class PlayerInputService : MonoBehaviour
 
         playerControls.Player.Jump.Enable();
         playerControls.Player.Jump.performed += jumpPressed => OnJumpPressed?.Invoke();
+        playerControls.Player.Jump.canceled += jumpPressed => OnJumpReleased?.Invoke();
+
+       // playerControls.Player.Jump.in += jumpPressed => OnJumpPressed?.Invoke();
+        
     }
 
 
