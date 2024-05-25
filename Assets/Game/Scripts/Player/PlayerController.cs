@@ -23,8 +23,8 @@ public class PlayerController : MonoBehaviour
     }
     void Start()
     {
-        playerTansfom = m_PlayerView.m_PlayerTansform;
-        playerRigidbody = m_PlayerView.m_PlayerRigidbody;  
+        playerTansfom = m_PlayerView.m_Tansform;
+        playerRigidbody = m_PlayerView.m_Rigidbody;  
     }
 
     
