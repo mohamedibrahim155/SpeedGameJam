@@ -5,11 +5,14 @@ using UnityEngine.InputSystem;
 public class PlayerInputService : MonoBehaviour
 {
     private PlayerControls playerControls;
+    private Vector2 moveVector;
+
 
     public float m_Horizontal;
     public float m_Vertical;
 
-    private Vector2 moveVector;
+
+
     private void OnEnable()
     {
         playerControls = new PlayerControls();
