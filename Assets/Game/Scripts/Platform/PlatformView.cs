@@ -1,18 +1,26 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlatformView : MonoBehaviour
 {
-    public int m_CurrentTypeID = 0;
+    public PlatformModel m_Config;
     public Transform m_Holder;
     public Collider m_Collider;
     public EPLatformType m_CurrentType;
     public List<Vector3> m_ListOfMoveablePoints = new List<Vector3>();
 
+    private int m_CurrentTypeID = 0;
     private BasePlatform currentPlatform;
     private Dictionary<EPLatformType, BasePlatform> listOfPlatforms = new Dictionary<EPLatformType, BasePlatform>();
 
+    public Coroutine m_SlipperyCoroutine = null;
+
+    public static event Action OnBecomeSlippery = delegate {};
+
+    public bool isSlippery = false;
     void Start()
     {
         Initilize();
@@ -33,7 +41,7 @@ public class PlatformView : MonoBehaviour
 
         AddPointsToMoveablePlatform();
 
-        ChangePlatformType(EPLatformType.MOVABLE);
+        currentPlatform = GetCurrentType();
 
         currentPlatform.Initialize();
     }
@@ -56,6 +64,7 @@ public class PlatformView : MonoBehaviour
         {
             platform.SetPlatformHolder(m_Holder);
             platform.SetCollider(m_Collider);
+            platform.SetPlatformConfig(m_Config);
 
             listOfPlatforms.Add(type, platform);
 
@@ -117,4 +126,43 @@ public class PlatformView : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        currentPlatform.OntriggerEnter(other);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        currentPlatform.OntriggerExit(other);
+    }
+
+
+    public void StartSlipperyTimer(float duration)
+    {
+        if (m_SlipperyCoroutine != null)
+        {
+            StopCoroutine(m_SlipperyCoroutine);
+        }
+        m_SlipperyCoroutine = StartCoroutine(SlipperyTimer(duration));
+    }
+    public IEnumerator SlipperyTimer(float slipperyTime)
+    { 
+        yield return new WaitForSeconds(slipperyTime);
+        isSlippery = true;
+        OnBecomeSlippery?.Invoke();
+    }
+
+    public bool IsSlippery()
+    {
+        return isSlippery;
+    }
+
+    public void ResetSlippery()
+    {
+        if (m_SlipperyCoroutine != null)
+        {
+            StopCoroutine(m_SlipperyCoroutine);
+        }
+        isSlippery = false;
+    }
 }

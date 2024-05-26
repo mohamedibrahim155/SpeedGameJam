@@ -7,8 +7,9 @@ public class PlayerColliderCheck : MonoBehaviour
     public LayerMask layerToCheck;
 
     public Transform m_HookTransform;
-    public PlayerController controller;
+    public PlayerController m_Controller;
 
+    public PlatformView m_Platform;
 
     private void Start()
     {
@@ -18,28 +19,31 @@ public class PlayerColliderCheck : MonoBehaviour
 
     private void OnTriggerEnter(Collider collider)
     {
-        if (collider.gameObject.CompareTag("Platform"))
+        if (((1 << collider.gameObject.layer) & layerToCheck) != 0)
         {
-           Debug.Log(collider.gameObject.name);
-
-            controller.CanHook(true);
+            m_Controller.CanHook(true);
             m_HookTransform = collider.transform.GetChild(0);
+            m_Controller.SetHookableTransform(m_HookTransform);
 
-            controller.SetHookableTransform(m_HookTransform);
+            if (collider.TryGetComponent<PlatformView>(out PlatformView platform))
+            {
+                m_Controller.SetPlatformHooked(platform);
+            }
+
+
         }
     }
 
     private void OnTriggerExit(Collider collider)
     {
-        if (collider.gameObject.CompareTag("Platform"))
+        if (((1 << collider.gameObject.layer) & layerToCheck) != 0)
         {
             if (m_HookTransform)
             {
-                controller.CanHook(false);
-
+                m_Controller.CanHook(false);
                 m_HookTransform = null;
-                controller.SetHookableTransform(m_HookTransform);
-              
+                m_Controller.SetHookableTransform(m_HookTransform);
+                m_Controller.SetPlatformHooked(null);
 
             }
         }

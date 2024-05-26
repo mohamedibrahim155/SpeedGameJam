@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
-using UnityEngine.UIElements;
+
 
 public class MovePlatform : BasePlatform
 {
@@ -124,5 +122,10 @@ public class MovePlatform : BasePlatform
         return 0;
     }
 
+    public override void OntriggerEnter(Collider collider)
+    {
+        Debug.Log("Collider name" + collider.name);
+    }
 
+    public override void OntriggerExit(Collider collider) { }
 }

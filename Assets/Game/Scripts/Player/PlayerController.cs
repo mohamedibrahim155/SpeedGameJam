@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,19 +7,28 @@ using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
+
+    public static event Action OnHookBegin;
+    public static event Action OnHookEnd;
+
     public PlayerModel m_PlayerConfig;
     public PlayerView m_PlayerView;
     public PlayerInputService m_PlayerInputService;
 
-    private Transform playerTansfom;
+   [SerializeField] private Transform playerTansfom;
    [SerializeField] private Transform hookTransform;
-    private Rigidbody playerRigidbody;
+   [SerializeField] private Rigidbody playerRigidbody;
 
 
+   [Header("Hook state")]
    [SerializeField] private bool isGrounded;
    [SerializeField] private bool canHook;
+   [SerializeField] private bool isHooked = false;
+   [SerializeField] private PlatformView m_Platform;
 
     private Vector3 moveDirection;
+
+
     private void Awake()
     {
         PlayerInputService.OnJumpPressed += PlayerJump;
@@ -102,23 +112,29 @@ public class PlayerController : MonoBehaviour
         hookTransform = hook;
     }
 
-    public bool isHooked = false;
+    public void SetPlatformHooked( PlatformView platform)
+    {
+        m_Platform = platform;
+    }
+
     private void CheckingHookingState()
     {
         if (canHook && hookTransform != null)
         {
             if (Input.GetKey(KeyCode.Space))
             {
-                Debug.Log("Space pressed");
                 isHooked = true;
-                playerTansfom.transform.position = hookTransform.transform.position;
+                playerRigidbody.MovePosition(hookTransform.transform.position);
+                playerRigidbody.velocity = Vector3.zero;
                 playerRigidbody.isKinematic = true;
 
+                
             }
 
         }
      
     }
+
 
     void OnJumpKeyRelease()
     {
@@ -130,5 +146,6 @@ public class PlayerController : MonoBehaviour
 
         }
     }
-  
+
+
 }
