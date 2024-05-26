@@ -12,6 +12,8 @@ public class PlatformModel : ScriptableObject
     [Header("Time")]
     public float m_StaticPlatformSlipTime = 2;
     public float m_SlipperyPlatformSlipTime = 0.5f;
-    public float m_MoveablePlatformsSlipTime = 1.5f;
+    public float m_MoveablePlatformSlipTime = 1.5f;
+
+    public float m_MovePlatformWaitTimeDelay = 2;
 
 }

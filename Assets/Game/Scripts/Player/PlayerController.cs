@@ -28,15 +28,22 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 moveDirection;
 
-    public enum HookStates
+    public enum EHookStates
     {
         None=0,
         Hooking=1,
         Sliding=2,
-
     }
 
-    public HookStates hookStates;
+    public enum EPlayerState
+    {
+        NORMAL =1,
+        FREEZE =2
+    }
+
+    public EHookStates m_HookStates;
+    public EPlayerState m_PlayerState;
+
     private void Awake()
     {
         PlayerInputService.OnJumpPressed += PlayerJump;
@@ -53,7 +60,8 @@ public class PlayerController : MonoBehaviour
         playerTansfom = m_PlayerView.m_Tansform;
         playerRigidbody = m_PlayerView.m_Rigidbody;  
 
-        hookStates = HookStates.None;
+        m_HookStates = EHookStates.None;
+        m_PlayerState = EPlayerState.NORMAL;
     }
 
     
@@ -65,12 +73,10 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-   
-
-        CheckingHookingState();
 
         CheckIsGrounded();
 
+        CheckingHookingState();
         HandleMovement();
 
     }
@@ -87,17 +93,15 @@ public class PlayerController : MonoBehaviour
         currentVelocity.y = playerRigidbody.velocity.y;
         playerRigidbody.velocity = currentVelocity;
     }
-
-
     void PlayerJump()
     {
         if (canHook)
         {
-            hookStates = HookStates.Hooking;
+            m_HookStates = EHookStates.Hooking;
         }
         else
         {
-            hookStates = HookStates.None;
+            m_HookStates = EHookStates.None;
         }
         
         if (isGrounded)
@@ -107,7 +111,6 @@ public class PlayerController : MonoBehaviour
             playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
         }
     }
-
     bool CheckIsGrounded()
     {
          isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position,Vector3.down, m_PlayerConfig.m_GroundCheckDistance);
@@ -140,66 +143,45 @@ public class PlayerController : MonoBehaviour
 
     private void CheckingHookingState()
     {
-        //if (canHook && hookTransform != null)
-        //{
-        //    if (Input.GetKey(KeyCode.Space))
-        //    {
-        //        if (!m_Platform.IsSlippery())
-        //        {
-
-        //            AttachHook(m_Platform);
-        //        }
-        //        else
-        //        {
-        //            DetachtHook();
-        //        }
-
-        //    }
-
-        //}
-
-        switch (hookStates)
+        switch (m_HookStates)
         {
-            case HookStates.None:
+            case EHookStates.None:
                 break;
-            case HookStates.Hooking:
+            case EHookStates.Hooking:
                 HookingState();
                 break;
-            case HookStates.Sliding:
+            case EHookStates.Sliding:
                 Sliding();
                 break;
 
         }
-     
     }
 
     private void HookingState()
     {
-        if (canHook && hookTransform!=null)
+        if (canHook && m_Platform != null)
         {
             if (Input.GetKey(KeyCode.Space))
             {
-               
-
                 AttachHook(m_Platform);
             }
-
-
         }
     }
 
     private void AttachHook(PlatformView platform)
     {
       
-
         playerTansfom.transform.position = hookTransform.transform.position;
         playerRigidbody.velocity = Vector3.zero;
         playerRigidbody.isKinematic = true;
 
         if (!isHooked)
         {
-            platform.StartSlipperyTimer(platform.m_Config.m_StaticPlatformSlipTime);
-            platform.OnBecomeSlippery += HandlePlatformSlippery;
+            if (platform.IsSlipperyPlatform())
+            {
+                platform.StartSlipperyTimer();
+                platform.OnBecomeSlippery += HandlePlatformSlippery;
+            }
             
         }
         isHooked = true;
@@ -208,16 +190,15 @@ public class PlayerController : MonoBehaviour
 
     private void HandlePlatformSlippery()
     {
-        Debug.Log("Sliding");
-        hookStates = HookStates.Sliding;
+        m_HookStates = EHookStates.Sliding;
     }
 
     void OnJumpKeyRelease()
     {
         if (isHooked)
         {
+            m_HookStates = EHookStates.None;
             DetachtHook();
-            hookStates = HookStates.None;
             playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
         }
       
@@ -225,11 +206,8 @@ public class PlayerController : MonoBehaviour
 
     private void Sliding()
     {
-
-        hookStates = HookStates.None;
-
-        playerRigidbody.isKinematic = false;
-        isHooked = false;
+        m_HookStates = EHookStates.None;
+        DetachtHook();
     }
 
     public void DetachtHook()
@@ -238,8 +216,6 @@ public class PlayerController : MonoBehaviour
         {
             m_Platform.OnBecomeSlippery -= HandlePlatformSlippery;
         }
-
-
         playerRigidbody.isKinematic = false;
         isHooked = false;
     }

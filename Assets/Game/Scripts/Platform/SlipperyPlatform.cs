@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class SlipperyPlatform : BasePlatform
+public class StaticPlatform : BasePlatform
 {
     public override void Initialize() 
     {
-        m_PlatformType = EPLatformType.SLIPPERY;
+        m_PlatformType = EPLatformType.STATIC;
     }
     public override void UpdateMovement()
     {

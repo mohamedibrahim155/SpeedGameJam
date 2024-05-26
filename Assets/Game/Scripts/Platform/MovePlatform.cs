@@ -5,15 +5,9 @@ using UnityEngine;
 
 public class MovePlatform : BasePlatform
 {
-    private float timer = 2;
-    private float countDownTimer = 0;
-    private int currentIndex = 0;
-    private List<Vector3> listOfPoints = new List<Vector3>();
-
-    public int m_CurrentIndex { get { return currentIndex; } set { currentIndex = value; } }
-
-    public float platformLerpTime = 5;
-
+    protected float countDownTimer = 0;
+    protected int currentIndex = 0;
+    protected List<Vector3> listOfPoints = new List<Vector3>();
 
     public override void Initialize() 
     {
@@ -45,20 +39,20 @@ public class MovePlatform : BasePlatform
         listOfPoints.Clear();
     }
 
-    private void PlatformMove(Vector3 movePoint)
+    protected void PlatformMove(Vector3 movePoint)
     {
         if (CheckDistance(m_PlatformHolder.transform.position, movePoint))
         {
-            m_PlatformHolder.transform.position = Vector3.Lerp(m_PlatformHolder.transform.position, movePoint, platformLerpTime * Time.deltaTime);
+            m_PlatformHolder.transform.position = Vector3.Lerp(m_PlatformHolder.transform.position, movePoint, m_PlatformConfig.m_PlatformLerpSpeed * Time.deltaTime);
         }
         else
         {
-            WaitTimer(timer);
+            WaitTimer(m_PlatformConfig.m_MovePlatformWaitTimeDelay);
         }
                 
     }
 
-    private void WaitTimer(float waitTime)
+    protected void WaitTimer(float waitTime)
     {
         if (countDownTimer >= waitTime)
         {
@@ -72,32 +66,23 @@ public class MovePlatform : BasePlatform
         }
     }
 
-    private void OnTimerFinish()
+    protected void OnTimerFinish()
     {
         ChangeCurrentIndexBy(1);
     }
 
-    private bool CheckDistance(Vector3 current, Vector3 target)
+    protected bool CheckDistance(Vector3 current, Vector3 target)
     {
          return Vector3.Distance(current, target) > 0.05f;
     }
 
-    private Vector3 GetPointByIndex(int index)
+    protected Vector3 GetPointByIndex(int index)
     {
         if (index < listOfPoints.Count) { return listOfPoints[index]; }
 
         return Vector3.zero;
     }
-    private void SetIndexValue(int index)
-    {
-        currentIndex = index;
-    }
-    private Vector3 GetCurrentIndexPosition() 
-    {
-        return listOfPoints[currentIndex];
-    }
-
-    private void ChangeCurrentIndexBy(int increment)
+    protected void ChangeCurrentIndexBy(int increment)
     {
 
         currentIndex += increment;
@@ -108,23 +93,8 @@ public class MovePlatform : BasePlatform
         }
     }
 
-    private int FindByPositon(Vector3 position)
-    {
-        
-        for (int i =0; i< listOfPoints.Count; i++) 
-        {
-            if (position == listOfPoints[i])
-            {
-                return i;
-            }
-        }
-
-        return 0;
-    }
-
     public override void OntriggerEnter(Collider collider)
     {
-        Debug.Log("Collider name" + collider.name);
     }
 
     public override void OntriggerExit(Collider collider) { }
