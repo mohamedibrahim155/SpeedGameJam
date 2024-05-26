@@ -56,13 +56,13 @@ public class PlayerController : MonoBehaviour
         PlayerInputService.OnJumpPressed += OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased += OnJumpKeyRelease;
 
-        BonFireTrigger.OnBonfireTriggered += BonFireState;
+        BonFireTrigger.OnBonfireTriggered += OnBonFireCollision;
     }
     private void OnDisable()
     {
         PlayerInputService.OnJumpPressed -= OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased -= OnJumpKeyRelease;
-        BonFireTrigger.OnBonfireTriggered -= BonFireState;
+        BonFireTrigger.OnBonfireTriggered -= OnBonFireCollision;
 
     }
     void Start()
@@ -71,8 +71,6 @@ public class PlayerController : MonoBehaviour
         playerRigidbody = m_PlayerView.m_Rigidbody;
 
         m_Parent = playerTansfom.parent;
-
-
 
         m_CurrentHookState = EHookStates.None;
 
@@ -172,10 +170,8 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
-    void SetHookState(EHookStates state)
-    {
-        m_CurrentHookState = state;
-    }
+
+    #region Hook's Collision
     public void CanHook(bool hookState)
     {
         canHook =  hookState;
@@ -188,8 +184,13 @@ public class PlayerController : MonoBehaviour
     {
         m_Platform = platform;
     }
+    #endregion
 
     #region HookingState
+    void SetHookState(EHookStates state)
+    {
+        m_CurrentHookState = state;
+    }
     private void CheckingHookingState()
     {
         switch (m_CurrentHookState)
@@ -307,7 +308,7 @@ public class PlayerController : MonoBehaviour
         playerTansfom.parent = m_Parent;
         playerRigidbody.isKinematic = false;
         isHooked = false;
-       // canHook = false;
+        canHook = false;
 
 
     }
@@ -373,7 +374,7 @@ public class PlayerController : MonoBehaviour
 
 
     #region BonFireState
-    void BonFireState(bool isBonFire)
+    void OnBonFireCollision(bool isBonFire)
     {
         isInsideBonFire =  isBonFire;
 
@@ -389,6 +390,7 @@ public class PlayerController : MonoBehaviour
         {
             case EPlayerState.NORMAL:
                 StopFreezeTimer();
+                SetMaterialColor(new Color(1, 0, 0,1.0f));
                 break;
 
             case EPlayerState.ENTER_FREEZEING:
@@ -426,6 +428,8 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(duration);
 
        SetPlayerState(EPlayerState.FREEZE);
+
+        CheckPlayerState(m_CurrentPlayerState);
     }
 
     private void SetPlayerState(EPlayerState state)
@@ -435,8 +439,11 @@ public class PlayerController : MonoBehaviour
 
     private void FreezeState() 
     {
-        
+        SetMaterialColor(new Color(1.0f, 0, 0, 0.5f));
     }
+
+  
+
     bool IsInsideBonFire()
     {
         return isInsideBonFire;
@@ -459,5 +466,8 @@ public class PlayerController : MonoBehaviour
         return m_PlayerConfig.m_Speed;
     }
 
-
+    private void SetMaterialColor(Color color)
+    {
+        m_PlayerView.m_Material.color = color;
+    }
 }

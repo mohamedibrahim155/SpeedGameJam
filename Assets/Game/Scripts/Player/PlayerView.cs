@@ -8,6 +8,7 @@ public class PlayerView : MonoBehaviour
     public Transform m_Tansform;
     public Collider m_Collider;
     public Rigidbody m_Rigidbody;
+    public Material m_Material;
 
     [Header("Ground Check")]
     public Transform m_GroundCheckTransform;
