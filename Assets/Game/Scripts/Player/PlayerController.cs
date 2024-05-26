@@ -7,43 +7,49 @@ using UnityEngine.InputSystem.XR;
 
 public class PlayerController : MonoBehaviour
 {
-
-    public static event Action OnHookBegin;
-    public static event Action OnHookEnd;
-
+    [Header("Dependencies")]
     public PlayerModel m_PlayerConfig;
     public PlayerView m_PlayerView;
     public PlayerInputService m_PlayerInputService;
 
+   [Header("Player References")]
    [SerializeField] private Transform playerTansfom;
    [SerializeField] private Transform hookTransform;
+   [SerializeField] private Transform m_Parent;
    [SerializeField] private Rigidbody playerRigidbody;
 
+    public enum EHookStates
+    {
+        None = 0,
+        Hooking = 1,
+        Sliding = 2,
+    }
 
    [Header("Hook state")]
    [SerializeField] private bool isGrounded;
    [SerializeField] private bool canHook;
-   [SerializeField] private bool isHooked = false;
-   [SerializeField] private bool isInsideBonFire = false;
+   [SerializeField] private bool isHooked;
    [SerializeField] private PlatformView m_Platform;
-
-    private Vector3 moveDirection;
-
-    public enum EHookStates
-    {
-        None=0,
-        Hooking=1,
-        Sliding=2,
-    }
+   [SerializeField] private EHookStates m_CurrentHookState;
 
     public enum EPlayerState
     {
-        NORMAL =1,
-        FREEZE =2
+        NORMAL = 1,
+        ENTER_FREEZEING = 2,
+        FREEZE = 3
     }
 
-    public EHookStates m_HookStates;
-    public EPlayerState m_PlayerState;
+    [Header("Freeze States")]
+    [SerializeField] private bool isInsideBonFire;
+    public EPlayerState m_CurrentPlayerState;
+    private Coroutine FreezeCoroutine;
+
+    [Header("Inputs")]
+    [SerializeField] private bool m_IsJumpKeyPressed = false;
+    [SerializeField] private bool restrictVerticalAxis;
+    private Vector3 moveDirection;
+
+
 
     private void Awake()
     {
@@ -57,14 +63,22 @@ public class PlayerController : MonoBehaviour
         PlayerInputService.OnJumpPressed -= OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased -= OnJumpKeyRelease;
         BonFireTrigger.OnBonfireTriggered -= BonFireState;
+
     }
     void Start()
     {
         playerTansfom = m_PlayerView.m_Tansform;
-        playerRigidbody = m_PlayerView.m_Rigidbody;  
+        playerRigidbody = m_PlayerView.m_Rigidbody;
 
-        m_HookStates = EHookStates.None;
-        m_PlayerState = EPlayerState.NORMAL;
+        m_Parent = playerTansfom.parent;
+
+
+
+        m_CurrentHookState = EHookStates.None;
+
+        SetPlayerState(EPlayerState.ENTER_FREEZEING);
+
+        CheckPlayerState(m_CurrentPlayerState);
     }
 
     
@@ -98,10 +112,17 @@ public class PlayerController : MonoBehaviour
 
 
     }
+
+    #region Movement
     void HandleInput()
     {
-        moveDirection = new Vector3(m_PlayerInputService.m_Horizontal, 0, m_PlayerInputService.m_Vertical) * m_PlayerConfig.m_Speed;
 
+        moveDirection = new Vector3(m_PlayerInputService.m_Horizontal, 0, m_PlayerInputService.m_Vertical) * GetMoveSpeed();
+
+        if (restrictVerticalAxis)
+        {
+            moveDirection.z = 0;
+        }
     }
     void HandleMovement()
     {
@@ -111,30 +132,33 @@ public class PlayerController : MonoBehaviour
     }
     void OnJumpkeyPressed()
     {
+        m_IsJumpKeyPressed = true;
         if (canHook)
         {
-            m_HookStates = EHookStates.Hooking;
+            m_CurrentHookState = EHookStates.Hooking;
         }
-        else
-        {
-            m_HookStates = EHookStates.None;
-        }
-        
+        //else
+        // {
+        // m_HookStates = EHookStates.None;
+        //  }
+
         if (isGrounded)
         {
             
 
-            playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
+            playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
         }
     }
 
     void OnJumpKeyRelease()
     {
+        m_IsJumpKeyPressed = false;
         if (isHooked)
         {
-            m_HookStates = EHookStates.None;
-            DetachtHook();
-            playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
+           m_CurrentHookState = EHookStates.None;
+
+            DetachHook();
+            playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
         }
 
     }
@@ -146,16 +170,20 @@ public class PlayerController : MonoBehaviour
         return isGrounded;
     }
 
+    #endregion
+
+    void SetHookState(EHookStates state)
+    {
+        m_CurrentHookState = state;
+    }
     public void CanHook(bool hookState)
     {
         canHook =  hookState;
     }
-
     public void SetHookableTransform(Transform hook)
     {
         hookTransform = hook;
     }
-
     public void SetPlatformHooked( PlatformView platform)
     {
         m_Platform = platform;
@@ -164,7 +192,7 @@ public class PlayerController : MonoBehaviour
     #region HookingState
     private void CheckingHookingState()
     {
-        switch (m_HookStates)
+        switch (m_CurrentHookState)
         {
             case EHookStates.None:
                 break;
@@ -172,7 +200,8 @@ public class PlayerController : MonoBehaviour
                 HookingState();
                 break;
             case EHookStates.Sliding:
-                Sliding();
+                //Sliding();
+                Sliding2();
                 break;
 
         }
@@ -180,19 +209,27 @@ public class PlayerController : MonoBehaviour
 
     private void HookingState()
     {
-        if (canHook && m_Platform != null)
+        if (canHook && m_Platform != null) 
         {
-            if (Input.GetKey(KeyCode.Space))
+            if (JumpKeyHold())
             {
-                AttachHook(m_Platform);
+                AttachHook2(m_Platform);
             }
         }
     }
 
+    private bool JumpKeyHold()
+    {
+        return m_IsJumpKeyPressed;
+    }
+ 
     private void AttachHook(PlatformView platform)
     {
-      
+
         playerTansfom.transform.position = hookTransform.transform.position;
+       // playerTansfom.transform.position = Vector3.Lerp(playerTansfom.transform.position, hookTransform.transform.position, 10 * Time.deltaTime);
+
+
         playerRigidbody.velocity = Vector3.zero;
         playerRigidbody.isKinematic = true;
 
@@ -208,30 +245,71 @@ public class PlayerController : MonoBehaviour
         isHooked = true;
 
     }
+
+    private void AttachHook2(PlatformView platform)
+    {
+        if (isHooked) 
+        {
+            return;
+        }
+
+        playerTansfom.parent = hookTransform;
+        playerRigidbody.velocity = Vector3.zero;
+        playerRigidbody.isKinematic = true;
+
+
+        if (platform.IsSlipperyPlatform())
+        {
+            platform.StartSlipperyTimer();
+            platform.OnBecomeSlippery += HandlePlatformSlippery;
+        }
+
+        
+        isHooked = true;
+
+    }
+
+
     #endregion
 
 
     #region Sliding State
     private void HandlePlatformSlippery()
     {
-        m_HookStates = EHookStates.Sliding;
+        m_CurrentHookState = EHookStates.Sliding;
+    }
+    private void Sliding()
+    {   
+    
+        DetachHook();
+
+        if ( JumpKeyHold())
+        {
+            m_CurrentHookState = EHookStates.Hooking;
+        }
+        else
+        {
+            m_CurrentHookState = EHookStates.None;
+        }
     }
 
- 
-    private void Sliding()
+    private void Sliding2()
     {
-        m_HookStates = EHookStates.None;
-        DetachtHook();
+        m_CurrentHookState = EHookStates.None;
+        DetachHook();
     }
-  
-    public void DetachtHook()
+    public void DetachHook()
     {
         if (m_Platform !=null)
         {
             m_Platform.OnBecomeSlippery -= HandlePlatformSlippery;
         }
+        playerTansfom.parent = m_Parent;
         playerRigidbody.isKinematic = false;
         isHooked = false;
+       // canHook = false;
+
+
     }
     #endregion
 
@@ -298,11 +376,88 @@ public class PlayerController : MonoBehaviour
     void BonFireState(bool isBonFire)
     {
         isInsideBonFire =  isBonFire;
+
+        m_CurrentPlayerState = isInsideBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING;
+
+        CheckPlayerState(m_CurrentPlayerState);
     }
 
+
+    void CheckPlayerState(EPlayerState state)
+    {
+        switch (state) 
+        {
+            case EPlayerState.NORMAL:
+                StopFreezeTimer();
+                break;
+
+            case EPlayerState.ENTER_FREEZEING:
+                StartFreezeTimer(m_PlayerConfig.m_FreezeTimer);
+                break;
+
+            case EPlayerState.FREEZE:
+                FreezeState();
+                break;
+
+
+        }
+    }
+
+    private void StartFreezeTimer(float duration)
+    {
+        if (FreezeCoroutine!=null)
+        {
+            StopCoroutine(FreezeCoroutine);
+        }
+        FreezeCoroutine = StartCoroutine(FreezeTimer(duration));
+    }
+
+    private void StopFreezeTimer() 
+    {
+        if (FreezeCoroutine != null)
+        {
+            StopCoroutine(FreezeCoroutine);
+        }
+        FreezeCoroutine =  null;
+    }
+
+    private IEnumerator FreezeTimer(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+       SetPlayerState(EPlayerState.FREEZE);
+    }
+
+    private void SetPlayerState(EPlayerState state)
+    {
+        m_CurrentPlayerState = state;
+    }
+
+    private void FreezeState() 
+    {
+        
+    }
     bool IsInsideBonFire()
     {
         return isInsideBonFire;
     }
     #endregion
+
+    private float GetJumpSpeed()
+    {
+        if (m_CurrentPlayerState == EPlayerState.FREEZE)
+            return m_PlayerConfig.m_FreezeJump;
+
+        return m_PlayerConfig.m_JumpSpeed;
+    }
+
+    private float GetMoveSpeed()
+    {
+        if (m_CurrentPlayerState == EPlayerState.FREEZE)
+            return m_PlayerConfig.m_FreezSpeed;
+
+        return m_PlayerConfig.m_Speed;
+    }
+
+
 }
