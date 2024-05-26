@@ -18,7 +18,7 @@ public class PlatformView : MonoBehaviour
 
     public Coroutine m_SlipperyCoroutine = null;
 
-    public static event Action OnBecomeSlippery = delegate {};
+    public event Action OnBecomeSlippery = delegate {};
 
     public bool isSlippery = false;
     void Start()
@@ -129,11 +129,15 @@ public class PlatformView : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         currentPlatform.OntriggerEnter(other);
+
+        if (isSlippery) { isSlippery = false; }
     }
 
     private void OnTriggerExit(Collider other)
     {
         currentPlatform.OntriggerExit(other);
+
+        if (isSlippery) { ResetSlippery(); }
     }
 
 

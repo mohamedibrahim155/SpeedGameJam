@@ -28,7 +28,15 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 moveDirection;
 
+    public enum HookStates
+    {
+        None=0,
+        Hooking=1,
+        Sliding=2,
 
+    }
+
+    public HookStates hookStates;
     private void Awake()
     {
         PlayerInputService.OnJumpPressed += PlayerJump;
@@ -44,6 +52,8 @@ public class PlayerController : MonoBehaviour
     {
         playerTansfom = m_PlayerView.m_Tansform;
         playerRigidbody = m_PlayerView.m_Rigidbody;  
+
+        hookStates = HookStates.None;
     }
 
     
@@ -68,7 +78,7 @@ public class PlayerController : MonoBehaviour
 
     void HandleInput()
     {
-        moveDirection = new Vector3(m_PlayerInputService.m_Horizontal,0, m_PlayerInputService.m_Vertical);
+        moveDirection = new Vector3(m_PlayerInputService.m_Horizontal, 0, m_PlayerInputService.m_Vertical) * m_PlayerConfig.m_Speed;
 
     }
     void HandleMovement()
@@ -81,10 +91,21 @@ public class PlayerController : MonoBehaviour
 
     void PlayerJump()
     {
+        if (canHook)
+        {
+            hookStates = HookStates.Hooking;
+        }
+        else
+        {
+            hookStates = HookStates.None;
+        }
+        
         if (isGrounded)
         {
+            
+
             playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
-        } 
+        }
     }
 
     bool CheckIsGrounded()
@@ -119,33 +140,110 @@ public class PlayerController : MonoBehaviour
 
     private void CheckingHookingState()
     {
-        if (canHook && hookTransform != null)
-        {
-            if (Input.GetKey(KeyCode.Space))
-            {
-                isHooked = true;
-                playerRigidbody.MovePosition(hookTransform.transform.position);
-                playerRigidbody.velocity = Vector3.zero;
-                playerRigidbody.isKinematic = true;
+        //if (canHook && hookTransform != null)
+        //{
+        //    if (Input.GetKey(KeyCode.Space))
+        //    {
+        //        if (!m_Platform.IsSlippery())
+        //        {
 
-                
-            }
+        //            AttachHook(m_Platform);
+        //        }
+        //        else
+        //        {
+        //            DetachtHook();
+        //        }
+
+        //    }
+
+        //}
+
+        switch (hookStates)
+        {
+            case HookStates.None:
+                break;
+            case HookStates.Hooking:
+                HookingState();
+                break;
+            case HookStates.Sliding:
+                Sliding();
+                break;
 
         }
      
     }
 
+    private void HookingState()
+    {
+        if (canHook && hookTransform!=null)
+        {
+            if (Input.GetKey(KeyCode.Space))
+            {
+               
+
+                AttachHook(m_Platform);
+            }
+
+
+        }
+    }
+
+    private void AttachHook(PlatformView platform)
+    {
+      
+
+        playerTansfom.transform.position = hookTransform.transform.position;
+        playerRigidbody.velocity = Vector3.zero;
+        playerRigidbody.isKinematic = true;
+
+        if (!isHooked)
+        {
+            platform.StartSlipperyTimer(platform.m_Config.m_StaticPlatformSlipTime);
+            platform.OnBecomeSlippery += HandlePlatformSlippery;
+            
+        }
+        isHooked = true;
+
+    }
+
+    private void HandlePlatformSlippery()
+    {
+        Debug.Log("Sliding");
+        hookStates = HookStates.Sliding;
+    }
 
     void OnJumpKeyRelease()
     {
         if (isHooked)
         {
-            playerRigidbody.isKinematic = false;
-            isHooked = false;
+            DetachtHook();
+            hookStates = HookStates.None;
             playerRigidbody.AddForce(Vector3.up * m_PlayerConfig.m_JumpSpeed, ForceMode.Impulse);
-
         }
+      
     }
 
+    private void Sliding()
+    {
+
+        hookStates = HookStates.None;
+
+        playerRigidbody.isKinematic = false;
+        isHooked = false;
+    }
+
+    public void DetachtHook()
+    {
+        if (m_Platform !=null)
+        {
+            m_Platform.OnBecomeSlippery -= HandlePlatformSlippery;
+        }
+
+
+        playerRigidbody.isKinematic = false;
+        isHooked = false;
+    }
+
+  
 
 }
