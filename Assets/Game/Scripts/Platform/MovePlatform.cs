@@ -13,7 +13,7 @@ public class MovePlatform : BasePlatform
     {
         m_PlatformType = EPLatformType.MOVABLE;
 
-        m_SlipperyTimer = 2;
+        m_WaitDelay = 2;
         currentIndex = 0;
        
         m_PlatformHolder.transform.position = GetPointByIndex(0); // Setting the first indexpostion
@@ -43,11 +43,11 @@ public class MovePlatform : BasePlatform
     {
         if (CheckDistance(m_PlatformHolder.transform.position, movePoint))
         {
-            m_PlatformHolder.transform.position = Vector3.Lerp(m_PlatformHolder.transform.position, movePoint, m_PlatformConfig.m_PlatformLerpSpeed * Time.deltaTime);
+            m_PlatformHolder.transform.position = Vector3.Lerp(m_PlatformHolder.transform.position, movePoint, m_Speed * Time.deltaTime);
         }
         else
         {
-            WaitTimer(m_PlatformConfig.m_MovePlatformWaitTimeDelay);
+            WaitTimer(m_WaitDelay);
         }
                 
     }

@@ -11,6 +11,7 @@ public class PlayerView : MonoBehaviour
 
     [Header("Ground Check")]
     public Transform m_GroundCheckTransform;
- 
+
+    public LayerMask m_WallLayer;
 
 }

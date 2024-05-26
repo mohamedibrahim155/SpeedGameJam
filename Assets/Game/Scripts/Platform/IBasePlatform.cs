@@ -4,24 +4,25 @@ using UnityEngine;
 
 public  class BasePlatform
 {
-    public float m_SlipperyTimer = 0;
+    public float m_WaitDelay = 0;
+    public float m_Speed = 1;
     public Transform m_PlatformHolder;
-    public Collider m_Collider;
     public PlatformModel m_PlatformConfig;
     public EPLatformType m_PlatformType;
 
-    public void SetPlatformHolder(Transform holder)
-    {
-        m_PlatformHolder = holder;
-    }
-    public void SetCollider(Collider collider)
-    {
-        m_Collider = collider;
-    }
-
-    public void SetPlatformConfig(PlatformModel config)
+    public void SetUp(PlatformModel config, Transform holder)
     {
         m_PlatformConfig = config;
+        m_PlatformHolder = holder;
+    }
+
+    public void SetWaitDelay(float timer)
+    {
+        m_WaitDelay = timer;
+    }
+    public void SetSpeed(float speed)
+    {
+        m_Speed = speed;
     }
 
     public virtual void Initialize() { }

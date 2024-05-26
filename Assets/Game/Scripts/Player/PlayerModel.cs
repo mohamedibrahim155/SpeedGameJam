@@ -9,6 +9,11 @@ public class PlayerModel : ScriptableObject
     public float m_Speed = 1f;
     public float m_JumpSpeed = 5.0f;
 
+    [Header("Freeze State")]    
+    public float m_FeezeJump = 2.5f;
+    public float m_FreezSpeed = 1.0f;
+
     [Header("Ground Check")]
     public float m_GroundCheckDistance = 0.5f;
+    public LayerMask m_WallLayer;
 }
