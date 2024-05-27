@@ -11,7 +11,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI m_TimerText;
 
     public bool m_TimerRun =false;
-
+    public bool m_IsMainMenu = false;
 
     public const string timerText = "Timer :";
 
@@ -45,7 +45,10 @@ public class UIManager : MonoBehaviour
 
     private void Update()
     {
-        TimerUpdate();
+        if (!m_IsMainMenu)
+        {
+            TimerUpdate();
+        }
     }
 
     void TimerUpdate()
@@ -77,5 +80,18 @@ public class UIManager : MonoBehaviour
         m_Timer = 0;
 
     }
+
+
+    public void QuitButton()
+    {
+        Debug.Log("Quit Pressed");
+        Application.Quit();
+    }
+
+    public void LoadScene(int sceneIndex)
+    {
+        GameManager.Instance.LoadScene(sceneIndex);
+    }
+
 
 }
