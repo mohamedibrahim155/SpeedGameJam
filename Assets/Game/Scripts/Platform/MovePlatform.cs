@@ -13,7 +13,7 @@ public class MovePlatform : BasePlatform
     {
         m_PlatformType = EPLatformType.MOVABLE;
 
-        m_WaitDelay = 2;
+      //  m_WaitDelay = 2;
         currentIndex = 0;
        
         m_PlatformHolder.transform.position = GetPointByIndex(0); // Setting the first indexpostion

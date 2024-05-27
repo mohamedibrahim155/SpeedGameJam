@@ -214,7 +214,8 @@ public class PlayerController : MonoBehaviour
         {
             if (JumpKeyHold())
             {
-                AttachHook2(m_Platform);
+               // AttachHook2(m_Platform);
+                AttachHook(m_Platform);
             }
         }
     }
