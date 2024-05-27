@@ -30,8 +30,8 @@ public class PlayerView : MonoBehaviour
     }
     private void OnDisable()
     {
-       // PlayerInputService.OnJumpPressed -= JumpKeyPressed;
-       // PlayerInputService.OnJumpReleased -= JumpKeyPressed;
+        PlayerInputService.OnJumpPressed -= JumpKeyPressed;
+        PlayerInputService.OnJumpReleased -= JumpKeyPressed;
 
     }
 
