@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
@@ -84,6 +85,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         HandleInput();
+
+        PlayerSkinRotation();
     }
 
     private void FixedUpdate()
@@ -166,6 +169,11 @@ public class PlayerController : MonoBehaviour
          isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position,Vector3.down, m_PlayerConfig.m_GroundCheckDistance);
        
         return isGrounded;
+    }
+
+    bool IsInAir()
+    {
+        return (!isGrounded);
     }
 
     #endregion
@@ -373,6 +381,47 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void PlayerSkinRotation()
+    {
+        #region Old
+
+
+        //if ((m_IsJumpKeyPressed))
+        //{
+
+        //    float targetRotation = isHooked ? 180 : angle * -1.0f;
+        //    m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotation, 0);
+        //}
+        //else
+        //{
+        //    float targetRotation3 = isGrounded ? angle * -1.0f : (IsInAir() && !isHooked) ? (horizontal == 0) ? 180 : angle * -1.0f : angle * -1.0f;
+        //    m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotation3, 0);
+
+        //}
+        #endregion
+
+
+        float horizontal = m_PlayerInputService.m_Horizontal;
+        float angle = horizontal * 90.0f;
+        float targetRotationY = 0.0f;  
+
+        if (m_IsJumpKeyPressed)
+        {
+            targetRotationY = isHooked ? 180.0f : angle * -1.0f;
+        }
+        else
+        {
+            targetRotationY = (isGrounded || (IsInAir() && !isHooked && horizontal != 0)) ? angle * -1.0f : 180.0f;
+        }
+
+        m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotationY, 0);
+    
+
+
+
+
+
+}
 
     #region BonFireState
     void OnBonFireCollision(bool isBonFire)
