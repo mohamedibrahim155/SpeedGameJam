@@ -10,7 +10,7 @@ public class PlayerInputService : MonoBehaviour
     public static event Action OnJumpHold;
 
     private PlayerControls playerControls;
-    private Vector2 moveVector;
+    public Vector2 moveVector;
 
 
     public float m_Horizontal;
