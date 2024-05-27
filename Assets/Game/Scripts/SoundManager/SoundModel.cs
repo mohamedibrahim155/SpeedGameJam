@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[CreateAssetMenu(fileName = "PlayerData", menuName = "Assets/PlayerData")]
+[CreateAssetMenu(fileName = "SoundData", menuName = "Assets/SoundData")]
 public class SoundModel : ScriptableObject
 {
-    public AudioClip m_BackgroundMusic;
-    public AudioClip m_LevelCompleteSFX;
+    public GameObject m_BackgroundMusicPrfab;
+    public GameObject m_LevelCompleteSFXPrefab;
 
     public float volume;
 }

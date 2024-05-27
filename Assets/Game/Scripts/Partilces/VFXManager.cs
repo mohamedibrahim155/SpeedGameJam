@@ -9,12 +9,12 @@ public class VFXManager : MonoBehaviour
 
     private void OnEnable()
     {
-        EndPlatformTrigger.OnFxSpanwn += SpawnFx;
+        EndPlatformTrigger.OnFxSpawn += SpawnFx;
     }
 
     private void OnDisable()
     {
-        EndPlatformTrigger.OnFxSpanwn -= SpawnFx;
+        EndPlatformTrigger.OnFxSpawn -= SpawnFx;
 
     }
 
@@ -23,9 +23,13 @@ public class VFXManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        GameObject winParticle = Instantiate(m_FxConfig.m_WinFxPrefab, point) as GameObject;
+        if (m_FxConfig != null && point !=null)
+        {
+            GameObject winParticle = GameObject.Instantiate(m_FxConfig.m_WinFxPrefab, point) as GameObject;
 
-        Destroy(winParticle, 1);
+            Destroy(winParticle, 0.85f);
+        }
+       
     }
     private void SpawnFx(Transform spawnPoint)
     {
