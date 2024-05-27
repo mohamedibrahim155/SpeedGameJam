@@ -562,6 +562,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGoalReached: 0
+  FxSpawnPosition: {fileID: 5470040213082859447}
   LayerToCheck:
     serializedVersion: 2
     m_Bits: 128
