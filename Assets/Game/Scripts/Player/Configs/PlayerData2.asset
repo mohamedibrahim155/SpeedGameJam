@@ -16,7 +16,7 @@ MonoBehaviour:
   m_JumpSpeed: 12
   m_FreezeJump: 6
   m_FreezSpeed: 2.5
-  m_FreezeTimer: 55
+  m_FreezeTimer: 47
   m_GroundCheckDistance: 0.5
   m_WallLayer:
     serializedVersion: 2
