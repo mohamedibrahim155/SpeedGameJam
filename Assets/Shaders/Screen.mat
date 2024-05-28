@@ -34,5 +34,5 @@ Material:
     - _GridSize: 0.01
     - _Intensity: 5
     m_Colors:
-    - _GridColour: {r: 1.879348, g: 2.3748114, b: 0.95589876, a: 1}
+    - _GridColour: {r: 0.6808905, g: 0.8603976, b: 0.3463235, a: 1}
   m_BuildTextureStacks: []

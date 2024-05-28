@@ -6,6 +6,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
 
+public enum EPlayerState
+{
+    NORMAL = 1,
+    ENTER_FREEZEING = 2,
+    FREEZE = 3
+}
 public class PlayerController : MonoBehaviour
 {
     [Header("Dependencies")]
@@ -13,11 +19,17 @@ public class PlayerController : MonoBehaviour
     public PlayerView m_PlayerView;
     public PlayerInputService m_PlayerInputService;
 
+
+
    [Header("Player References")]
-   [SerializeField] private Transform playerTansfom;
-   [SerializeField] private Transform hookTransform;
-   [SerializeField] private Transform m_Parent;
-   [SerializeField] private Rigidbody playerRigidbody;
+    private Transform playerTansfom;
+    private Transform hookTransform;
+    private Transform m_Parent;
+    private Rigidbody playerRigidbody;
+
+ 
+
+   [SerializeField] private bool isGrounded;
 
     public enum EHookStates
     {
@@ -25,20 +37,13 @@ public class PlayerController : MonoBehaviour
         Hooking = 1,
         Sliding = 2,
     }
-
-   [Header("Hook state")]
-   [SerializeField] private bool isGrounded;
-   [SerializeField] private bool canHook;
+    [Header("Hook state")]
+    [SerializeField] private bool canHook;
    [SerializeField] private bool isHooked;
    [SerializeField] private PlatformView m_Platform;
    [SerializeField] private EHookStates m_CurrentHookState;
 
-    public enum EPlayerState
-    {
-        NORMAL = 1,
-        ENTER_FREEZEING = 2,
-        FREEZE = 3
-    }
+
 
     [Header("Freeze States")]
     [SerializeField] private bool isInsideBonFire;
@@ -68,18 +73,22 @@ public class PlayerController : MonoBehaviour
     }
     void Start()
     {
-        playerTansfom = m_PlayerView.m_Tansform;
-        playerRigidbody = m_PlayerView.m_Rigidbody;
 
-        m_Parent = playerTansfom.parent;
+        SetUpConfigs(m_PlayerView.m_Tansform, m_PlayerView.m_Rigidbody);
 
         m_CurrentHookState = EHookStates.None;
 
         SetPlayerState(EPlayerState.ENTER_FREEZEING);
 
-        CheckPlayerState(m_CurrentPlayerState);
+       // CheckPlayerState(m_CurrentPlayerState);
     }
 
+    void SetUpConfigs(Transform playerTransform, Rigidbody rigidbody)
+    {
+        playerTansfom = playerTransform;
+        m_Parent = playerTransform.parent;
+        playerRigidbody = rigidbody;
+    }
     
     // Update is called once per frame
     void Update()
@@ -428,7 +437,9 @@ public class PlayerController : MonoBehaviour
 
         m_CurrentPlayerState = isInsideBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING;
 
-        CheckPlayerState(m_CurrentPlayerState);
+        SetPlayerState(isInsideBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING);
+
+       
     }
 
 
@@ -438,7 +449,6 @@ public class PlayerController : MonoBehaviour
         {
             case EPlayerState.NORMAL:
                 StopFreezeTimer();
-                SetMaterialColor(new Color(1, 0, 0,1.0f));
                 break;
 
             case EPlayerState.ENTER_FREEZEING:
@@ -447,9 +457,7 @@ public class PlayerController : MonoBehaviour
 
             case EPlayerState.FREEZE:
                 FreezeState();
-                break;
-
-
+                break;   
         }
     }
 
@@ -477,12 +485,14 @@ public class PlayerController : MonoBehaviour
 
        SetPlayerState(EPlayerState.FREEZE);
 
-        CheckPlayerState(m_CurrentPlayerState);
+       // CheckPlayerState(m_CurrentPlayerState);
     }
 
     private void SetPlayerState(EPlayerState state)
     {
         m_CurrentPlayerState = state;
+
+        CheckPlayerState(m_CurrentPlayerState);
     }
 
     private void FreezeState() 

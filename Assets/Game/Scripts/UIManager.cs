@@ -13,6 +13,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI m_TimerText;
     public TextMeshProUGUI m_BestTimerText;
 
+    public Slider m_BatterySlider;
+
     public GameObject m_PauseMenuCanvas;
 
     public bool m_TimerRun =false;
@@ -62,12 +64,15 @@ public class UIManager : MonoBehaviour
     {
         GameManager.OnSceneLoaded += SaveHighScoreOnLoad;
         PlayerInputService.OnEscapePressed += OnEscapeKeyPressed;
+        PlayerHealthService.OnHealthChange += BatteryHealthBarChange;
 
     }
     private void OnDisable()
     {
         GameManager.OnSceneLoaded -= SaveHighScoreOnLoad;
         PlayerInputService.OnEscapePressed -= OnEscapeKeyPressed;
+        PlayerHealthService.OnHealthChange -= BatteryHealthBarChange;
+
 
     }
 
@@ -206,5 +211,13 @@ public class UIManager : MonoBehaviour
         if (isGamePaused) { isGamePaused = false; }
 
         Time.timeScale = 1.0f;
+    }
+
+    void BatteryHealthBarChange(float batteryHealth)
+    {
+        if (m_BatterySlider == null) return;
+
+        m_BatterySlider.value = batteryHealth;
+
     }
 }
