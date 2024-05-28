@@ -6,4 +6,5 @@ using UnityEngine;
 public class FxModel : ScriptableObject
 {
     public GameObject m_WinFxPrefab;
+    public GameObject m_HookedFxPrefab;
 }

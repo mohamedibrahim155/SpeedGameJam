@@ -49,7 +49,11 @@ public class SoundManager : MonoBehaviour
     {
         if (m_JumpAuidoSource == null) return;
 
-        if (!m_JumpAuidoSource.isPlaying) m_JumpAuidoSource.Play();
+        if (!m_JumpAuidoSource.isPlaying)
+        {
+            m_JumpAuidoSource.Stop();
+        } 
+        m_JumpAuidoSource.Play();
     }
 
     private void CheckForBGMSpawned()

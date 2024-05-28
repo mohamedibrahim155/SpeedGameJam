@@ -15,6 +15,7 @@ public enum EPlayerState
 public class PlayerController : MonoBehaviour
 {
     public static event Action OnPlayerJumped = delegate { };
+    public static event Action<Transform> OnPlayerHooked = delegate { };
 
     [Header("Dependencies")]
     public PlayerModel m_PlayerConfig;
@@ -267,6 +268,8 @@ public class PlayerController : MonoBehaviour
                 platform.StartSlipperyTimer();
                 platform.OnBecomeSlippery += HandlePlatformSlippery;
             }
+
+            OnPlayerHooked?.Invoke(hookTransform);
             
         }
         isHooked = true;
