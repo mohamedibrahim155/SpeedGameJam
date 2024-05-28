@@ -143,10 +143,8 @@ public class PlayerController : MonoBehaviour
         // m_HookStates = EHookStates.None;
         //  }
 
-        if (isGrounded)
+        if (CheckIsGrounded())
         {
-            
-
             playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
         }
     }
@@ -166,7 +164,7 @@ public class PlayerController : MonoBehaviour
 
     bool CheckIsGrounded()
     {
-         isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position,Vector3.down, m_PlayerConfig.m_GroundCheckDistance);
+         isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position,Vector3.down, m_PlayerConfig.m_GroundCheckDistance, m_PlayerConfig.m_WallLayer);
        
         return isGrounded;
     }

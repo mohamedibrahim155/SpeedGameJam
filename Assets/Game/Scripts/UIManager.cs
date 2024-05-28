@@ -9,8 +9,11 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
     public float m_Timer = 0;
+
     public TextMeshProUGUI m_TimerText;
     public TextMeshProUGUI m_BestTimerText;
+
+    public GameObject m_PauseMenuCanvas;
 
     public bool m_TimerRun =false;
     public bool m_IsMainMenu = false;
@@ -21,6 +24,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private EScene m_CurrentLevel;
     [SerializeField] private float m_CurrentHighScore;
 
+    private bool isGamePaused;
 
     private void Awake()
     {
@@ -56,11 +60,14 @@ public class UIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GameManager.OnSceneLoaded += NextLevelLoad;
+        GameManager.OnSceneLoaded += SaveHighScoreOnLoad;
+        PlayerInputService.OnEscapePressed += OnEscapeKeyPressed;
+
     }
-    private void OnDiosable()
+    private void OnDisable()
     {
-        GameManager.OnSceneLoaded -= NextLevelLoad;
+        GameManager.OnSceneLoaded -= SaveHighScoreOnLoad;
+        PlayerInputService.OnEscapePressed -= OnEscapeKeyPressed;
 
     }
 
@@ -95,11 +102,11 @@ public class UIManager : MonoBehaviour
         return appendString + FormatTimer(timer);  
     }
 
-    public void NextLevelLoad()
+    public void SaveHighScoreOnLoad()
     {
         if(m_TimerRun) 
         {
-            SaveBestTimer(m_Timer);
+            SaveBestHighScoreTimer(m_Timer);
         } 
 
         ResetTimer();
@@ -131,7 +138,7 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.LoadScene(sceneIndex);
     }
 
-    public void SaveBestTimer(float newTime)
+    public void SaveBestHighScoreTimer(float newTime)
     {
         string bestTimerBaseByLevel = GetLevelString(m_CurrentLevel);
 
@@ -162,5 +169,42 @@ public class UIManager : MonoBehaviour
             case EScene.LEVEL_2: return "HighScore_Level_2";
         }
         return " ";
+    }
+
+    private void OnEscapeKeyPressed()
+    { 
+        isGamePaused = !isGamePaused;
+
+
+        if (m_PauseMenuCanvas != null)
+        {
+            m_PauseMenuCanvas.SetActive(isGamePaused);
+
+            if (isGamePaused)
+            {
+                PauseMenu();
+            }
+            else
+            {
+                Resume();
+            }
+        }
+
+
+    }
+
+
+
+    public void PauseMenu()
+    {
+
+        Time.timeScale = 0.0f;
+    }
+
+    public void Resume()
+    {
+        if (isGamePaused) { isGamePaused = false; }
+
+        Time.timeScale = 1.0f;
     }
 }

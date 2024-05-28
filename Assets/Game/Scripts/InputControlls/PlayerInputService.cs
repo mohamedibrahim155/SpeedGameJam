@@ -8,6 +8,7 @@ public class PlayerInputService : MonoBehaviour
     public static event  Action OnJumpPressed;
     public static event  Action OnJumpReleased;
     public static event Action OnJumpHold;
+    public static event Action OnEscapePressed;
 
     private PlayerControls playerControls;
     public Vector2 moveVector;
@@ -31,6 +32,9 @@ public class PlayerInputService : MonoBehaviour
         playerControls.Player.Jump.performed += jumpPressed => OnJumpPressed?.Invoke();
         playerControls.Player.Jump.canceled += jumpPressed => OnJumpReleased?.Invoke();
 
+        playerControls.Player.Pause.Enable();
+        playerControls.Player.Pause.performed += pausePressed => OnEscapePressed?.Invoke();
+
        // playerControls.Player.Jump.in += jumpPressed => OnJumpPressed?.Invoke();
         
     }
@@ -43,6 +47,7 @@ public class PlayerInputService : MonoBehaviour
         {
             playerControls.Player.Move.Disable();
             playerControls.Player.Jump.Disable();
+            playerControls.Player.Pause.Disable();
         }
 
 
