@@ -14,6 +14,8 @@ public enum EPlayerState
 }
 public class PlayerController : MonoBehaviour
 {
+    public static event Action OnPlayerJumped = delegate { };
+
     [Header("Dependencies")]
     public PlayerModel m_PlayerConfig;
     public PlayerView m_PlayerView;
@@ -154,7 +156,7 @@ public class PlayerController : MonoBehaviour
 
         if (CheckIsGrounded())
         {
-            playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
+            Jump();
         }
     }
 
@@ -166,9 +168,17 @@ public class PlayerController : MonoBehaviour
            m_CurrentHookState = EHookStates.None;
 
             DetachHook();
-            playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
+
+            Jump();
         }
 
+    }
+
+    void Jump()
+    {
+        OnPlayerJumped?.Invoke();
+
+        playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
     }
 
     bool CheckIsGrounded()

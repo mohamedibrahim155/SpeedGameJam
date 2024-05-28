@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -5,24 +6,33 @@ using UnityEngine;
 
 public class SoundManager : MonoBehaviour
 {
+
+
     public SoundModel m_SoundConfig;
+    public AudioSource m_JumpAuidoSource;
+
 
     public string m_BGMSoundTag = "BGM";
     private void OnEnable()
     {
         EndPlatformTrigger.OnFxSpawn += PlayLevelCompleteSFX;
+        PlayerController.OnPlayerJumped += PlayJumpSound;
+
     }
 
     private void OnDisable()
     {
         EndPlatformTrigger.OnFxSpawn -= PlayLevelCompleteSFX;
+        PlayerController.OnPlayerJumped -= PlayJumpSound;
+
+
     }
 
     private void Start()
     {
         CheckForBGMSpawned();
     }
-    IEnumerator SpawnSound(float duration,Transform point)
+    IEnumerator SpawnLevelCompleteSound(float duration,Transform point)
     {
         yield return new WaitForSeconds(duration);
 
@@ -32,9 +42,15 @@ public class SoundManager : MonoBehaviour
     }
     void PlayLevelCompleteSFX(Transform spawnPostion)
     {
-        StartCoroutine(SpawnSound(1.0f, spawnPostion));
+        StartCoroutine(SpawnLevelCompleteSound(1.0f, spawnPostion));
     }
 
+    void PlayJumpSound()
+    {
+        if (m_JumpAuidoSource == null) return;
+
+        if (!m_JumpAuidoSource.isPlaying) m_JumpAuidoSource.Play();
+    }
 
     private void CheckForBGMSpawned()
     {

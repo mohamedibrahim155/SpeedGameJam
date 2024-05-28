@@ -177,7 +177,9 @@ public class UIManager : MonoBehaviour
     }
 
     private void OnEscapeKeyPressed()
-    { 
+    {
+        if (m_IsMainMenu) return;
+
         isGamePaused = !isGamePaused;
 
 
