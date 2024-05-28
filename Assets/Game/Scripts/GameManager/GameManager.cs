@@ -3,19 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+public enum EScene
+{
+    NONE = -1,
+    MAIN_MENU = 0,
+    TUTORIAL = 1,
+    LEVEL_1 = 2,
+    LEVEL_2 = 3,
+
+}
+
 public class GameManager : MonoBehaviour
 {
-    public enum EScene
-    {
-        MAIN_MENU =0,
-        TUTORIAL =1,
-        LEVEL_1 =2,
-        LEVEL_2 =3,
 
-    }
     public static GameManager Instance;
     public static event Action OnSceneLoaded;
-
+    public EScene m_CurrentScene;
 
     private Dictionary<int, Scene> listOfLevels = new Dictionary<int, Scene>();
     private void Awake()
@@ -37,8 +40,6 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         IntializeAllScenes();
-
-        
     }
 
     private void OnEnable()
@@ -56,14 +57,14 @@ public class GameManager : MonoBehaviour
     void IntializeAllScenes()
     {
 
-
-
         for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
         {
-            Debug.Log("##Scene " + i.ToString());
             AddScene(i, SceneManager.GetSceneByBuildIndex(i));
            
         }
+
+        m_CurrentScene = (EScene)SceneManager.GetActiveScene().buildIndex;
+
     }
 
     private void AddScene(int levelType, Scene levelName)
