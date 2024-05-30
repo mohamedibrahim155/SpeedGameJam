@@ -2775,7 +2775,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 900829694}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: QuitButton
         m_Mode: 1
