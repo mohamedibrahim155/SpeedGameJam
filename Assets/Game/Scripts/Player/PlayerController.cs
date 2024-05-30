@@ -1,17 +1,20 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.XR;
 
 public enum EPlayerState
 {
     NORMAL = 1,
-    ENTER_FREEZEING = 2,
-    FREEZE = 3
+    ENTER_SLOWSTATE = 2,
+    SLOW_STATE = 3
 }
+public enum EHookStates
+{
+    NONE = 0,
+    HOOKING = 1,
+    SLIDING = 2,
+}
+
 public class PlayerController : MonoBehaviour
 {
     public static event Action OnPlayerJumped = delegate { };
@@ -30,21 +33,14 @@ public class PlayerController : MonoBehaviour
     private Transform m_Parent;
     private Rigidbody playerRigidbody;
 
+    [SerializeField] private bool isGrounded;
+
  
-
-   [SerializeField] private bool isGrounded;
-
-    public enum EHookStates
-    {
-        None = 0,
-        Hooking = 1,
-        Sliding = 2,
-    }
     [Header("Hook state")]
     [SerializeField] private bool canHook;
-   [SerializeField] private bool isHooked;
-   [SerializeField] private PlatformView m_Platform;
-   [SerializeField] private EHookStates m_CurrentHookState;
+    [SerializeField] private bool isHooked;
+    [SerializeField] private PlatformView m_Platform;
+    [SerializeField] private EHookStates m_CurrentHookState;
 
 
 
@@ -64,27 +60,28 @@ public class PlayerController : MonoBehaviour
     {
         PlayerInputService.OnJumpPressed += OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased += OnJumpKeyRelease;
-
-        BonFireTrigger.OnBonfireTriggered += OnBonFireCollision;
+        BonFireTrigger.OnTerminalTriggered += TerminalCollided;
     }
     private void OnDisable()
     {
         PlayerInputService.OnJumpPressed -= OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased -= OnJumpKeyRelease;
-        BonFireTrigger.OnBonfireTriggered -= OnBonFireCollision;
+        BonFireTrigger.OnTerminalTriggered -= TerminalCollided;
 
     }
     void Start()
     {
+        Initilize();
+    }
 
+    private void Initilize()
+    {
         SetUpConfigs(m_PlayerView.m_Tansform, m_PlayerView.m_Rigidbody);
 
-        m_CurrentHookState = EHookStates.None;
+        m_CurrentHookState = EHookStates.NONE;
 
-        SetPlayerState(EPlayerState.ENTER_FREEZEING);
-
-       // CheckPlayerState(m_CurrentPlayerState);
-    }
+        SetPlayerState(EPlayerState.ENTER_SLOWSTATE);
+}
 
     void SetUpConfigs(Transform playerTransform, Rigidbody rigidbody)
     {
@@ -92,8 +89,7 @@ public class PlayerController : MonoBehaviour
         m_Parent = playerTransform.parent;
         playerRigidbody = rigidbody;
     }
-    
-    // Update is called once per frame
+   
     void Update()
     {
         HandleInput();
@@ -148,7 +144,7 @@ public class PlayerController : MonoBehaviour
         m_IsJumpKeyPressed = true;
         if (canHook)
         {
-            m_CurrentHookState = EHookStates.Hooking;
+            m_CurrentHookState = EHookStates.HOOKING;
         }
         //else
         // {
@@ -166,7 +162,7 @@ public class PlayerController : MonoBehaviour
         m_IsJumpKeyPressed = false;
         if (isHooked)
         {
-           m_CurrentHookState = EHookStates.None;
+           m_CurrentHookState = EHookStates.NONE;
 
             DetachHook();
 
@@ -182,17 +178,6 @@ public class PlayerController : MonoBehaviour
         playerRigidbody.AddForce(Vector3.up * GetJumpSpeed(), ForceMode.Impulse);
     }
 
-    bool CheckIsGrounded()
-    {
-         isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position,Vector3.down, m_PlayerConfig.m_GroundCheckDistance, m_PlayerConfig.m_WallLayer);
-       
-        return isGrounded;
-    }
-
-    bool IsInAir()
-    {
-        return (!isGrounded);
-    }
 
     #endregion
 
@@ -221,12 +206,12 @@ public class PlayerController : MonoBehaviour
     {
         switch (m_CurrentHookState)
         {
-            case EHookStates.None:
+            case EHookStates.NONE:
                 break;
-            case EHookStates.Hooking:
+            case EHookStates.HOOKING:
                 HookingState();
                 break;
-            case EHookStates.Sliding:
+            case EHookStates.SLIDING:
                 //Sliding();
                 Sliding2();
                 break;
@@ -238,7 +223,7 @@ public class PlayerController : MonoBehaviour
     {
         if (canHook && m_Platform != null) 
         {
-            if (JumpKeyHold())
+            if (IsJumpKeyHeld())
             {
                // AttachHook2(m_Platform);
                 AttachHook(m_Platform);
@@ -246,18 +231,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool JumpKeyHold()
-    {
-        return m_IsJumpKeyPressed;
-    }
+
  
     private void AttachHook(PlatformView platform)
     {
 
         playerTansfom.transform.position = hookTransform.transform.position;
-       // playerTansfom.transform.position = Vector3.Lerp(playerTansfom.transform.position, hookTransform.transform.position, 10 * Time.deltaTime);
-
-
         playerRigidbody.velocity = Vector3.zero;
         playerRigidbody.isKinematic = true;
 
@@ -306,26 +285,29 @@ public class PlayerController : MonoBehaviour
     #region Sliding State
     private void HandlePlatformSlippery()
     {
-        m_CurrentHookState = EHookStates.Sliding;
+        m_CurrentHookState = EHookStates.SLIDING;
     }
+
+    // Auto-Grab
     private void Sliding()
     {   
     
         DetachHook();
 
-        if ( JumpKeyHold())
+        if ( IsJumpKeyHeld())
         {
-            m_CurrentHookState = EHookStates.Hooking;
+            m_CurrentHookState = EHookStates.HOOKING;
         }
         else
         {
-            m_CurrentHookState = EHookStates.None;
+            m_CurrentHookState = EHookStates.NONE;
         }
     }
 
+    // Manual Grab
     private void Sliding2()
     {
-        m_CurrentHookState = EHookStates.None;
+        m_CurrentHookState = EHookStates.NONE;
         DetachHook();
     }
     public void DetachHook()
@@ -343,89 +325,14 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
-    void WallHit()
-    {
-        bool isWall = false;
-
-        RaycastHit hit;
-        isWall = Physics.Raycast(playerTansfom.transform.position + new Vector3(0,-0.25f,0), 
-            playerTansfom.forward, 
-            out hit, Mathf.Infinity, m_PlayerConfig.m_WallLayer);
-
-        if (isWall) 
-        {
-            if (hit.collider!=null)
-            {
-                Vector3 direction = hit.point - playerTansfom.position;
-                direction.Normalize();
-                 direction.y = 0;
-                Quaternion playerRotation = Quaternion.LookRotation(direction);
-
-
-                playerTansfom.rotation = Quaternion.Slerp(playerTansfom.rotation,playerRotation, 2*Time.deltaTime);
-
-                Debug.DrawLine(playerTansfom.transform.position + new Vector3(0, -0.25f, 0), hit.point, Color.green);
-                Debug.Log("WallHit true");
-            }
-           
-        }
-
-
-    }
-
-    void RotatePlayerTowardsWalls()
-    {
-        float castRadius = 0.5f; // Adjust radius based on player size and wall proximity needs
-        Vector3 castOrigin = playerTansfom.position; // Adjust offset depending on player model
-        Vector3 castDirection = playerTansfom.forward;
-        float castDistance = Mathf.Infinity; // Adjust distance based on detection range
-
-        RaycastHit hit;
-        if (Physics.SphereCast(castOrigin, castRadius, castDirection, out hit, castDistance, m_PlayerConfig.m_WallLayer))
-        {
-            Debug.DrawLine(playerTansfom.position, hit.point);
-
-            // Ensure only walls with appropriate normals are considered
-            if (Mathf.Abs(Vector3.Dot(hit.normal, Vector3.up)) > 0.5f) // Adjust threshold for acceptable wall angles
-            {
-                return; // Skip rotation if not a suitable wall
-            }
-
-            // Calculate the target rotation based on wall normal (ignoring Y-axis)
-            Vector3 targetDirection = Vector3.ProjectOnPlane(hit.normal, Vector3.up).normalized;
-            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
-
-            // Smoothly rotate player towards the target rotation
-            playerTansfom.rotation = Quaternion.Slerp(playerTansfom.rotation, targetRotation, 2 * Time.deltaTime);
-
-        }
-    }
 
     void PlayerSkinRotation()
     {
-        #region Old
-
-
-        //if ((m_IsJumpKeyPressed))
-        //{
-
-        //    float targetRotation = isHooked ? 180 : angle * -1.0f;
-        //    m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotation, 0);
-        //}
-        //else
-        //{
-        //    float targetRotation3 = isGrounded ? angle * -1.0f : (IsInAir() && !isHooked) ? (horizontal == 0) ? 180 : angle * -1.0f : angle * -1.0f;
-        //    m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotation3, 0);
-
-        //}
-        #endregion
-
-
         float horizontal = m_PlayerInputService.m_Horizontal;
         float angle = horizontal * 90.0f;
         float targetRotationY = 0.0f;  
 
-        if (m_IsJumpKeyPressed)
+        if (IsJumpKeyHeld())
         {
             targetRotationY = isHooked ? 180.0f : angle * -1.0f;
         }
@@ -435,24 +342,14 @@ public class PlayerController : MonoBehaviour
         }
 
         m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotationY, 0);
-    
-
-
-
-
-
 }
 
-    #region BonFireState
-    void OnBonFireCollision(bool isBonFire)
+    #region Terminal
+    void TerminalCollided(bool isBonFire)
     {
-        isInsideBonFire =  isBonFire;
+        m_CurrentPlayerState = isBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE;
 
-        m_CurrentPlayerState = isInsideBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING;
-
-        SetPlayerState(isInsideBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING);
-
-       
+        SetPlayerState(isBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
     }
 
 
@@ -464,11 +361,11 @@ public class PlayerController : MonoBehaviour
                 StopFreezeTimer();
                 break;
 
-            case EPlayerState.ENTER_FREEZEING:
+            case EPlayerState.ENTER_SLOWSTATE:
                 StartFreezeTimer(m_PlayerConfig.m_FreezeTimer);
                 break;
 
-            case EPlayerState.FREEZE:
+            case EPlayerState.SLOW_STATE:
                 FreezeState();
                 break;   
         }
@@ -496,9 +393,7 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
 
-       SetPlayerState(EPlayerState.FREEZE);
-
-       // CheckPlayerState(m_CurrentPlayerState);
+       SetPlayerState(EPlayerState.SLOW_STATE);
     }
 
     private void SetPlayerState(EPlayerState state)
@@ -515,15 +410,12 @@ public class PlayerController : MonoBehaviour
 
   
 
-    bool IsInsideBonFire()
-    {
-        return isInsideBonFire;
-    }
+
     #endregion
 
     private float GetJumpSpeed()
     {
-        if (m_CurrentPlayerState == EPlayerState.FREEZE)
+        if (m_CurrentPlayerState == EPlayerState.SLOW_STATE)
             return m_PlayerConfig.m_FreezeJump;
 
         return m_PlayerConfig.m_JumpSpeed;
@@ -531,10 +423,24 @@ public class PlayerController : MonoBehaviour
 
     private float GetMoveSpeed()
     {
-        if (m_CurrentPlayerState == EPlayerState.FREEZE)
+        if (m_CurrentPlayerState == EPlayerState.SLOW_STATE)
             return m_PlayerConfig.m_FreezSpeed;
 
         return m_PlayerConfig.m_Speed;
+    }
+    private bool IsJumpKeyHeld()
+    {
+        return m_IsJumpKeyPressed;
+    }
+    private bool CheckIsGrounded()
+    {
+        isGrounded = Physics.Raycast(m_PlayerView.m_GroundCheckTransform.position, Vector3.down, m_PlayerConfig.m_GroundCheckDistance, m_PlayerConfig.m_WallLayer);
+
+        return isGrounded;
+    }
+    private bool IsInAir()
+    {
+        return (!isGrounded);
     }
 
     private void SetMaterialColor(Color color)

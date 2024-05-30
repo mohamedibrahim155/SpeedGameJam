@@ -7,22 +7,34 @@ public class EndPlatformTrigger : MonoBehaviour
 {
     public static event Action OnEndPlatformTrigger;
     public static event Action<Transform> OnFxSpawn;
-    public bool isGoalReached = false;
+
     public Transform FxSpawnPosition;
     public LayerMask LayerToCheck;
+    
+    private bool isGoalReached;
     private void OnTriggerEnter(Collider other)
     {
         if (((1 << other.gameObject.layer) & LayerToCheck) != 0) 
         {
             if (!isGoalReached)
             {
-                OnFxSpawn?.Invoke(FxSpawnPosition);
-                OnEndPlatformTrigger?.Invoke();
+                SpawnParticleFx(FxSpawnPosition);
+
+                TriggerPlayerReached();
             }
             isGoalReached = true;
         }    
     }
 
+    private void SpawnParticleFx(Transform fxPoint)
+    {
+        OnFxSpawn?.Invoke(fxPoint);
+    }
+
+    private void TriggerPlayerReached()
+    {
+        OnEndPlatformTrigger?.Invoke();
+    }
 
 
 

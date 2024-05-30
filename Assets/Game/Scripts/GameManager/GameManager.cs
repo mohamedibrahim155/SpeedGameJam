@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance;
     public static event Action OnSceneLoaded;
+    public static event Action OnGameComplete;
     public EScene m_CurrentScene;
 
     private Dictionary<int, Scene> listOfLevels = new Dictionary<int, Scene>();
@@ -99,6 +100,9 @@ public class GameManager : MonoBehaviour
         if (nextSceneIndex >= SceneManager.sceneCountInBuildSettings) 
         {
             nextSceneIndex = 0;
+
+            GameComplete();
+            return;
         }
 
 
@@ -107,12 +111,22 @@ public class GameManager : MonoBehaviour
     }
     public IEnumerator DelayLoadNextLevel(int level)
     {
-        OnSceneLoaded?.Invoke();
-        yield return new WaitForSeconds(2);
+        CallbackBeforeSceneLoad();
+
+         yield return new WaitForSeconds(2);
         
         LoadScene(level);
     }
 
     #endregion
 
+    private void GameComplete()
+    { 
+        OnGameComplete?.Invoke();
+    }
+
+    private void CallbackBeforeSceneLoad()
+    {
+        OnSceneLoaded?.Invoke();
+    }
 }

@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     public Slider m_BatterySlider;
 
     public GameObject m_PauseMenuCanvas;
+    public GameObject m_GameCompleteCanvas;
 
     public bool m_TimerRun =false;
     public bool m_IsMainMenu = false;
@@ -49,27 +50,22 @@ public class UIManager : MonoBehaviour
         SetHighScore();
     }
 
-    private void SetHighScore()
-    {
-        m_CurrentHighScore = GetHighScoreBasedOnLevel(m_CurrentLevel);
-
-        if (m_BestTimerText != null)
-        {
-            m_BestTimerText.text = (m_CurrentHighScore == -1) ? m_BestTimerText.text :
-                TimerText(bestTimerText, m_CurrentHighScore);
-        }
-    }
+  
 
     private void OnEnable()
     {
         GameManager.OnSceneLoaded += SaveHighScoreOnLoad;
+        GameManager.OnGameComplete += GameCompletePopUp;
         PlayerInputService.OnEscapePressed += OnEscapeKeyPressed;
         PlayerHealthService.OnHealthChange += BatteryHealthBarChange;
+
 
     }
     private void OnDisable()
     {
         GameManager.OnSceneLoaded -= SaveHighScoreOnLoad;
+        GameManager.OnGameComplete -= GameCompletePopUp;
+
         PlayerInputService.OnEscapePressed -= OnEscapeKeyPressed;
         PlayerHealthService.OnHealthChange -= BatteryHealthBarChange;
 
@@ -84,6 +80,16 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    private void SetHighScore()
+    {
+        m_CurrentHighScore = GetHighScoreBasedOnLevel(m_CurrentLevel);
+
+        if (m_BestTimerText != null)
+        {
+            m_BestTimerText.text = (m_CurrentHighScore == -1) ? m_BestTimerText.text :
+                TimerText(bestTimerText, m_CurrentHighScore);
+        }
+    }
     void TimerUpdate(EScene level)
     {
         if (level == EScene.LEVEL_1 || level == EScene.LEVEL_2)
@@ -204,7 +210,6 @@ public class UIManager : MonoBehaviour
 
     public void PauseMenu()
     {
-
         Time.timeScale = 0.0f;
     }
 
@@ -222,4 +227,29 @@ public class UIManager : MonoBehaviour
         m_BatterySlider.value = batteryHealth;
 
     }
+
+    void GameCompletePopUp()
+    {
+        if (m_GameCompleteCanvas == null) return;
+
+        SaveHighScoreOnLoad();
+
+        PauseMenu();
+
+        m_GameCompleteCanvas.SetActive(true);
+
+        GameOverPopUp gamepopUp = m_GameCompleteCanvas.GetComponent<GameOverPopUp>();
+
+        ShowHighscore(gamepopUp.m_Level1, GetHighScoreBasedOnLevel(EScene.LEVEL_1));
+        ShowHighscore(gamepopUp.m_Level2, GetHighScoreBasedOnLevel(EScene.LEVEL_2));
+    }
+
+    void ShowHighscore(TextMeshProUGUI textUi, float value)
+    {
+        textUi.text = FormatTimer(value);
+    }
+
+   
+
+
 }

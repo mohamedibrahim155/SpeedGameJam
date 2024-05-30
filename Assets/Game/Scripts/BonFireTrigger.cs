@@ -5,30 +5,15 @@ using UnityEngine;
 
 public class BonFireTrigger : MonoBehaviour
 {
-    public static event Action<bool> OnBonfireTriggered = delegate { };
+    public static event Action<bool> OnTerminalTriggered = delegate { };
 
-    public Collider m_Collider;
     public LayerMask m_LayerToCheck;
-
-    [SerializeField] private bool m_IsInsideBonFire = false;
-    private void Awake()
-    {
-        m_Collider = GetComponent<Collider>();
-    }
-
-
-    public bool IsInsideBonFire()
-    {
-        return m_IsInsideBonFire;
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if (((1 << other.gameObject.layer) & m_LayerToCheck) != 0)
         {
-            m_IsInsideBonFire = true;
 
-            OnBonfireTriggered?.Invoke(true);
+            TerminalEntered(true);
         }
     }
 
@@ -36,11 +21,13 @@ public class BonFireTrigger : MonoBehaviour
     {
         if (((1 << other.gameObject.layer) & m_LayerToCheck) != 0)
         {
-            m_IsInsideBonFire = false;
-
-            OnBonfireTriggered?.Invoke(false);
-
+            TerminalEntered(false);
         }
+    }
+
+    void TerminalEntered(bool isEntered)
+    {
+        OnTerminalTriggered?.Invoke(isEntered);
     }
 
 }

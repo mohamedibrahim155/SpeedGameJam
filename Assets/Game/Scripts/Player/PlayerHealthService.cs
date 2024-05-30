@@ -24,17 +24,17 @@ public class PlayerHealthService : MonoBehaviour
 
        SetBatteryHealth(m_MaxBatteryHealth);
 
-       SetPlayerState(EPlayerState.ENTER_FREEZEING);
+       SetPlayerState(EPlayerState.ENTER_SLOWSTATE);
     }
 
     private void OnEnable()
     {
-        BonFireTrigger.OnBonfireTriggered += OnBonfireCollision;
+        BonFireTrigger.OnTerminalTriggered += OnBonfireCollision;
     }
 
     private void OnDisable()
     {
-        BonFireTrigger.OnBonfireTriggered -= OnBonfireCollision;
+        BonFireTrigger.OnTerminalTriggered -= OnBonfireCollision;
     }
 
 
@@ -55,7 +55,7 @@ public class PlayerHealthService : MonoBehaviour
             }
             else
             {
-                SetPlayerState(EPlayerState.FREEZE);
+                SetPlayerState(EPlayerState.SLOW_STATE);
             }
         }
     }
@@ -67,11 +67,11 @@ public class PlayerHealthService : MonoBehaviour
             case EPlayerState.NORMAL:
                 NormalState();
                 break;
-            case EPlayerState.ENTER_FREEZEING:
+            case EPlayerState.ENTER_SLOWSTATE:
                 EnteringFreezingState();
                 break;
 
-            case EPlayerState.FREEZE:
+            case EPlayerState.SLOW_STATE:
                 FreezeState();
                 break;
 
@@ -121,7 +121,7 @@ public class PlayerHealthService : MonoBehaviour
     {
         isBonFireEntered = isInside;
 
-        SetPlayerState(isBonFireEntered ? EPlayerState.NORMAL : EPlayerState.ENTER_FREEZEING);
+        SetPlayerState(isBonFireEntered ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
 
     }
 

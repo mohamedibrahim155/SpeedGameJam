@@ -8,10 +8,9 @@ public class CheckPointTrigger : MonoBehaviour
     public static event Action<Transform> OnCheckpointReached  =  delegate { };
 
     public Transform SpawnPostion;
-
-    public bool isCheckPointReached;
     public LayerMask layerToCheck;
 
+    private bool isCheckPointReached;
     private void OnTriggerEnter(Collider other)
     {
         if (((1 << other.gameObject.layer) & layerToCheck) != 0)
