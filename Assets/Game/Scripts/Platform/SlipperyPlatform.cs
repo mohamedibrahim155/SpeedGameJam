@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
 
 public class StaticPlatform : BasePlatform
 {
@@ -13,17 +9,11 @@ public class StaticPlatform : BasePlatform
     {
        
     }
-    public override void Stop() 
+
+
+    public override bool IsSlippery()
     {
+        return base.IsSlippery();
     }
 
-    public override void OntriggerEnter(Collider collider) 
-    {
-    }
-    public override void OntriggerExit(Collider collider) { }
-
-
-
-
- 
 }

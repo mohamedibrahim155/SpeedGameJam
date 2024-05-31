@@ -13,17 +13,12 @@ public class SlipperyPlatform : BasePlatform
     {
        
     }
-    public override void Stop() 
+
+
+    public override bool IsSlippery()
     {
+        return true;
     }
 
-    public override void OntriggerEnter(Collider collider) 
-    {
-    }
-    public override void OntriggerExit(Collider collider) { }
 
-
-
-
- 
 }

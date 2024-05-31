@@ -1,14 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public  class BasePlatform
 {
-    public float m_WaitDelay = 0;
-    public float m_Speed = 1;
-    public Transform m_PlatformHolder;
-    public PlatformModel m_PlatformConfig;
-    public EPLatformType m_PlatformType;
+    protected float m_WaitDelay = 0;
+    protected float m_Speed = 1;
+    protected Transform m_PlatformHolder;
+    protected PlatformModel m_PlatformConfig;
+    protected EPLatformType m_PlatformType;
 
     public void SetUp(PlatformModel config, Transform holder)
     {
@@ -27,8 +25,9 @@ public  class BasePlatform
 
     public virtual void Initialize() { }
     public virtual void UpdateMovement() { }
-    public virtual void Stop() { }
 
-    public virtual void OntriggerEnter(Collider collider) { }
-    public virtual void OntriggerExit(Collider collider) { }
+    public virtual bool IsSlippery()
+    { 
+        return false;
+    }
 }

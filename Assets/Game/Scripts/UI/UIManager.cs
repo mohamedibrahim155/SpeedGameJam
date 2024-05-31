@@ -57,7 +57,7 @@ public class UIManager : MonoBehaviour
     {
         GameManager.OnSceneLoaded += SaveHighScoreOnLoad;
         GameManager.OnGameComplete += GameCompletePopUp;
-        PlayerInputService.OnEscapePressed += OnEscapeKeyPressed;
+        PlayerInputService.OnEscapePressed += PausePanelPopUp;
         PlayerHealthService.OnHealthChange += BatteryHealthBarChange;
 
 
@@ -67,7 +67,7 @@ public class UIManager : MonoBehaviour
         GameManager.OnSceneLoaded -= SaveHighScoreOnLoad;
         GameManager.OnGameComplete -= GameCompletePopUp;
 
-        PlayerInputService.OnEscapePressed -= OnEscapeKeyPressed;
+        PlayerInputService.OnEscapePressed -= PausePanelPopUp;
         PlayerHealthService.OnHealthChange -= BatteryHealthBarChange;
 
 
@@ -129,7 +129,6 @@ public class UIManager : MonoBehaviour
         int seconds = Mathf.FloorToInt(timer % 60f);
         int hundredths = Mathf.FloorToInt((timer * 100f) % 100f);
         return string.Format("{0:00}:{1:00}.{2:00}", minutes, seconds, hundredths);
-        //return string.Format("<color=#4D4DFF>{0:00}</color>:<color=#00FF00>{1:00}</color>.<color=#00FF00>{2:00}</color>", minutes, seconds, hundredths);
     }
 
     public void ResetTimer()
@@ -183,27 +182,24 @@ public class UIManager : MonoBehaviour
         return " ";
     }
 
-    private void OnEscapeKeyPressed()
+    private void PausePanelPopUp()
     {
         if (m_IsMainMenu) return;
 
         isGamePaused = !isGamePaused;
 
+        if (m_PauseMenuCanvas == null) return;
 
-        if (m_PauseMenuCanvas != null)
+        m_PauseMenuCanvas.SetActive(isGamePaused);
+
+        if (isGamePaused)
         {
-            m_PauseMenuCanvas.SetActive(isGamePaused);
-
-            if (isGamePaused)
-            {
-                PauseMenu();
-            }
-            else
-            {
-                Resume();
-            }
+            PauseMenu();
         }
-
+        else
+        {
+            Resume();
+        }
 
     }
 

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,7 +12,6 @@ public class MovePlatform : BasePlatform
     {
         m_PlatformType = EPLatformType.MOVABLE;
 
-      //  m_WaitDelay = 2;
         currentIndex = 0;
        
         m_PlatformHolder.transform.position = GetPointByIndex(0); // Setting the first indexpostion
@@ -22,7 +20,7 @@ public class MovePlatform : BasePlatform
     {
         PlatformMove(GetPointByIndex(currentIndex));
     }
-    public override void Stop() { }
+
 
 
     public void AddPoints(Vector3 points)
@@ -66,12 +64,12 @@ public class MovePlatform : BasePlatform
         }
     }
 
-    protected void OnTimerFinish()
+    private void OnTimerFinish()
     {
         ChangeCurrentIndexBy(1);
     }
 
-    protected bool CheckDistance(Vector3 current, Vector3 target)
+    private bool CheckDistance(Vector3 current, Vector3 target)
     {
          return Vector3.Distance(current, target) > 0.05f;
     }
@@ -93,9 +91,8 @@ public class MovePlatform : BasePlatform
         }
     }
 
-    public override void OntriggerEnter(Collider collider)
+    public override bool IsSlippery()
     {
+        return false;
     }
-
-    public override void OntriggerExit(Collider collider) { }
 }

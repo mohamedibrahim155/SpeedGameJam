@@ -12,13 +12,11 @@ public class MovableSlipperyPlatform : MovePlatform
     {
         PlatformMove(GetPointByIndex(currentIndex));
     }
-    public override void Stop()
-    {
-    }
 
-    public override void OntriggerEnter(Collider collider)
+
+    public override bool IsSlippery()
     {
+        return true;
     }
-    public override void OntriggerExit(Collider collider) { }
 
 }

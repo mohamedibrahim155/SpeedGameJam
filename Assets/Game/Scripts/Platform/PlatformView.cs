@@ -10,6 +10,8 @@ public class PlatformView : MonoBehaviour
     public PlatformModel m_Config;
     public Transform m_Holder;
     public Collider m_Collider;
+
+    private EPLatformType currentPlatformType { get { return m_CurrentType; }  set { m_CurrentType = value; } }
     public EPLatformType m_CurrentType;
 
     public float m_MovablePlatformWaitDelay = 0;
@@ -22,19 +24,21 @@ public class PlatformView : MonoBehaviour
     public event Action OnBecomeSlippery = delegate { };
 
 
-    private bool isSlippery = false;
-    private int m_CurrentTypeID = 0;
+    private bool isSlipped = false;
+    private int currentTypeID = 0;
+    private BasePlatform currentPlatform;
   
 
-    private BasePlatform currentPlatform;
+
+    [SerializeField] private  bool m_RecordPosition;
     private Dictionary<EPLatformType, BasePlatform> listOfPlatforms = new Dictionary<EPLatformType, BasePlatform>();
     private Coroutine m_SlipperyCoroutine = null;
 
-    [SerializeField] private  bool m_RecordPosition;
 
 
     void Start()
     {
+
         Initilize();
     }
 
@@ -44,46 +48,58 @@ public class PlatformView : MonoBehaviour
         UpdatePlatformBehaviour();
     }
 
-   
+
     private void Initilize()
     {
-        AddPlatformType(EPLatformType.STATIC, new StaticPlatform());
-        AddPlatformType(EPLatformType.MOVABLE, new MovePlatform());
-        AddPlatformType(EPLatformType.SLIPPERY, new SlipperyPlatform());
-        AddPlatformType(EPLatformType.MOVABLE_SLIPPERY, new MovableSlipperyPlatform());
-
-        AddPointsToMoveablePlatform();
-
+        AddPlatform(m_CurrentType);
 
         currentPlatform = GetCurrentType();
 
         currentPlatform.Initialize();
     }
 
+    void AddPlatform(EPLatformType type)
+    {
+        switch (type)
+        {
+            case EPLatformType.STATIC:
+                AddPlatformTypeToList(EPLatformType.STATIC, new StaticPlatform());
+                break;
+            case EPLatformType.MOVABLE:
+                AddPlatformTypeToList(EPLatformType.MOVABLE, new MovePlatform());
+                AddPointsToMoveablePlatform();
+                break;
+            case EPLatformType.SLIPPERY:
+                AddPlatformTypeToList(EPLatformType.SLIPPERY, new SlipperyPlatform());
+                break;
+            case EPLatformType.MOVABLE_SLIPPERY:
+                AddPlatformTypeToList(EPLatformType.MOVABLE_SLIPPERY, new MovableSlipperyPlatform());
+                AddPointsToMoveablePlatform();
+                break;
+        }
+
+        currentPlatformType = type;
+        currentTypeID = (int)type;
+    }
 
     private void AddPointsToMoveablePlatform()
     {
-        if (m_ListOfMoveablePoints.Count > 0)
+        if (m_ListOfMoveablePoints.Count <= 0) return;
+
+        foreach (Vector3 points in m_ListOfMoveablePoints)
         {
             if (m_CurrentType == EPLatformType.MOVABLE)
             {
-                foreach (Vector3 points in m_ListOfMoveablePoints)
-                {
-                    ((MovePlatform)GetPlatfromByType(EPLatformType.MOVABLE)).AddPoints(points);
-                }
+                ((MovePlatform)currentPlatform).AddPoints(points);
             }
             else if (m_CurrentType == EPLatformType.MOVABLE_SLIPPERY)
             {
-                foreach (Vector3 points in m_ListOfMoveablePoints)
-                {
-                    ((MovableSlipperyPlatform)GetPlatfromByType(EPLatformType.MOVABLE_SLIPPERY)).AddPoints(points);
-                }
+                ((MovableSlipperyPlatform)currentPlatform).AddPoints(points);
             }
-           
         }
     }
 
-    void AddPlatformType(EPLatformType type, BasePlatform platform)
+    void AddPlatformTypeToList(EPLatformType type, BasePlatform platform)
     {
         if (!listOfPlatforms.ContainsKey(type))
         {
@@ -97,7 +113,7 @@ public class PlatformView : MonoBehaviour
         }
     }
 
-    void RemovePlatformType(EPLatformType type)
+    void RemovePlatformTypeFromList(EPLatformType type)
     {
         if (listOfPlatforms.ContainsKey(type))
         {
@@ -112,22 +128,27 @@ public class PlatformView : MonoBehaviour
 
     BasePlatform GetCurrentType()
     {
-        return listOfPlatforms[m_CurrentType];
+        return listOfPlatforms[currentPlatformType];
     }
 
     void ChangePlatformType(EPLatformType type)
     {
-        if (m_CurrentType == type) return;
-        
-        m_CurrentType = type;
-        m_CurrentTypeID = (int)m_CurrentType;
+        if (currentPlatformType == type) return;
+
+        if (GetPlatfromByType(type) == null)
+        {
+            AddPlatform(type);
+        }
+
+        currentPlatformType = type;
+        currentTypeID = (int)m_CurrentType;
         currentPlatform = GetPlatfromByType(type);
 
     }
 
     void UpdatePlatformBehaviour()
     {
-        switch (m_CurrentType)
+        switch (currentPlatformType)
         {
             case EPLatformType.STATIC:
                 ChangePlatformType(EPLatformType.STATIC);
@@ -148,22 +169,19 @@ public class PlatformView : MonoBehaviour
         if (currentPlatform != null)
         {
             currentPlatform.UpdateMovement();
-
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        currentPlatform.OntriggerEnter(other);
 
-        if (isSlippery) { ResetSlipperyState(); }
+        if (isSlipped) { ResetSlipperyState(); }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        currentPlatform.OntriggerExit(other);
 
-        if (isSlippery) { ResetSlipperyState(); }
+        if (isSlipped) { ResetSlipperyState(); }
     }
 
 
@@ -182,13 +200,8 @@ public class PlatformView : MonoBehaviour
     {
 
         yield return new WaitForSeconds(slipperyTime);
-        isSlippery = true;
+        isSlipped = true;
         OnBecomeSlippery?.Invoke();
-    }
-
-    public bool IsSlipped()
-    {
-        return isSlippery;
     }
 
     public void ResetSlipperyState()
@@ -197,7 +210,7 @@ public class PlatformView : MonoBehaviour
         {
             StopCoroutine(m_SlipperyCoroutine);
         }
-        isSlippery = false;
+        isSlipped = false;
     }
 
     float GetSlipperyTime()
@@ -206,10 +219,8 @@ public class PlatformView : MonoBehaviour
         {
             case EPLatformType.SLIPPERY:
                 return m_Config.m_SlipperyPlatformSlipTime;
-                break;
             case EPLatformType.MOVABLE_SLIPPERY:
                 return m_Config.m_MoveablePlatformSlipTime;
-                break;
         }
 
         return 0;
@@ -217,43 +228,22 @@ public class PlatformView : MonoBehaviour
 
     public bool IsSlipperyPlatform()
     {
-        switch (m_CurrentType)
-        {
-            case EPLatformType.STATIC:
-                return false;
-                break;
-            case EPLatformType.MOVABLE:
-                return false;
-                break;
-
-            case EPLatformType.SLIPPERY:
-                return true;
-                break;
-            case EPLatformType.MOVABLE_SLIPPERY:
-                return true;
-                break;
-        }
-
-        return false;
+        return currentPlatform.IsSlippery();
     }
 
 
+
+    /// <summary>
+    /// function for editor  recording position for platforms
+    /// </summary>
     [ContextMenu("Add Current Position")]
     public void AddRecordedValueToList()
     {
         if (m_RecordPosition)
         {
-            if (m_CurrentType == EPLatformType.MOVABLE)
+            if (m_CurrentType == EPLatformType.MOVABLE || m_CurrentType == EPLatformType.MOVABLE_SLIPPERY)
             {
                 m_ListOfMoveablePoints.Add(transform.position);
-
-                //((MovePlatform)GetPlatfromByType(EPLatformType.MOVABLE)).AddPoints(transform.position);
-            }
-            else if (m_CurrentType == EPLatformType.MOVABLE_SLIPPERY)
-            {
-                m_ListOfMoveablePoints.Add(transform.position);
-
-                //((MovePlatform)GetPlatfromByType(EPLatformType.MOVABLE)).AddPoints(transform.position);
 
             }
         }
