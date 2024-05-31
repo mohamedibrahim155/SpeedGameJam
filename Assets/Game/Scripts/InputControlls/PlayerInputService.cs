@@ -11,11 +11,11 @@ public class PlayerInputService : MonoBehaviour
     public static event Action OnEscapePressed;
 
     private PlayerControls playerControls;
-    public Vector2 moveVector;
-
+    private Vector2 moveVector;
 
     public float m_Horizontal;
     public float m_Vertical;
+    public Vector2 InputAxis { get { return moveVector; } private set { moveVector = value; } }
 
 
 
@@ -34,8 +34,6 @@ public class PlayerInputService : MonoBehaviour
 
         playerControls.Player.Pause.Enable();
         playerControls.Player.Pause.performed += pausePressed => OnEscapePressed?.Invoke();
-
-       // playerControls.Player.Jump.in += jumpPressed => OnJumpPressed?.Invoke();
         
     }
 

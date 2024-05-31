@@ -9,6 +9,4 @@ public class SoundModel : ScriptableObject
     public GameObject m_BackgroundMusicPrfab;
     public GameObject m_LevelCompleteSFXPrefab;
     public GameObject m_JumpSFXPrefab;
-
-    public float volume;
 }

@@ -1,21 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class PlayerColliderCheck : MonoBehaviour
 {
     public LayerMask layerToCheck;
-
     public Transform m_HookTransform;
+
+    [Header("Dependencies")]
     public PlayerController m_Controller;
-
     public PlatformView m_Platform;
-
-    private void Start()
-    {
-       // controller = GetComponentInParent<PlayerController>();
-    }
-
 
     private void OnTriggerEnter(Collider collider)
     {
@@ -30,7 +23,6 @@ public class PlayerColliderCheck : MonoBehaviour
                 m_Controller.SetPlatformHooked(platform);
             }
 
-
         }
     }
 
@@ -42,7 +34,7 @@ public class PlayerColliderCheck : MonoBehaviour
             {
                 m_Controller.CanHook(false);
                 m_HookTransform = null;
-                m_Controller.SetHookableTransform(m_HookTransform);
+                m_Controller.SetHookableTransform(null);
                 m_Controller.SetPlatformHooked(null);
 
             }

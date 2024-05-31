@@ -10,14 +10,11 @@ public class PlayerHealthService : MonoBehaviour
  
 
     [SerializeField] private PlayerModel m_Config;
-    [SerializeField] private float m_CurrrentBatteryValue;
     [SerializeField] private float m_MaxBatteryHealth { get { return m_Config.m_FreezeTimer; } }
-
+    [SerializeField] private bool isTimerRun = false;
+    [SerializeField] private float m_CurrrentBatteryValue;
     [SerializeField] private EPlayerState m_CurrentState;
 
-    [SerializeField] private bool isTimerRun = false;
-
-    private bool isBonFireEntered = false;
 
     private void Start()
     {
@@ -29,12 +26,12 @@ public class PlayerHealthService : MonoBehaviour
 
     private void OnEnable()
     {
-        BonFireTrigger.OnTerminalTriggered += OnBonfireCollision;
+        TerminalTriggerBox.OnTerminalTriggered += TerminalTriggered;
     }
 
     private void OnDisable()
     {
-        BonFireTrigger.OnTerminalTriggered -= OnBonfireCollision;
+        TerminalTriggerBox.OnTerminalTriggered -= TerminalTriggered;
     }
 
 
@@ -59,7 +56,7 @@ public class PlayerHealthService : MonoBehaviour
             }
         }
     }
-    public void OnBatteryStateChange()
+    public void UpdatePlayerStates()
     {
 
       switch (m_CurrentState)
@@ -68,11 +65,11 @@ public class PlayerHealthService : MonoBehaviour
                 NormalState();
                 break;
             case EPlayerState.ENTER_SLOWSTATE:
-                EnteringFreezingState();
+                EnterSlowState();
                 break;
 
             case EPlayerState.SLOW_STATE:
-                FreezeState();
+                SlowState();
                 break;
 
         }
@@ -95,7 +92,7 @@ public class PlayerHealthService : MonoBehaviour
     {
         m_CurrentState = state;
 
-        OnBatteryStateChange();
+        UpdatePlayerStates();
     }
 
     private void NormalState()
@@ -105,23 +102,22 @@ public class PlayerHealthService : MonoBehaviour
         SetBatteryHealth(m_MaxBatteryHealth);
     }
 
-    private void EnteringFreezingState()
+    private void EnterSlowState()
     {
         isTimerRun = true;
     }
 
-    private void FreezeState()
+    private void SlowState()
     {
         isTimerRun = false;
 
         SetBatteryHealth(0);
     }
 
-    private void OnBonfireCollision(bool isInside)
+    private void TerminalTriggered(bool isInside)
     {
-        isBonFireEntered = isInside;
 
-        SetPlayerState(isBonFireEntered ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
+        SetPlayerState(isInside ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
 
     }
 

@@ -1,16 +1,17 @@
-using System;
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class VFXManager : MonoBehaviour
 {
+    private int m_CurrentPoolIndex;
+    private int maxPrefabCount { get { return m_MaxFxPrefabCount; } set { m_MaxFxPrefabCount = value; } }
+
     public FxModel m_FxConfig;
     public Transform m_ParticlesHolder;
-    public int MaxPrefabSpawnCount = 10;
-
-
-   public struct ParticleData
+    public int m_MaxFxPrefabCount = 10;
+    public struct ParticleData
     {
        public GameObject gameObject;
        public ParticleSystem particle;
@@ -21,34 +22,34 @@ public class VFXManager : MonoBehaviour
         }
 
     }
-
-    public int m_CurrentPoolIndex = 0;
     public Dictionary<int, ParticleData> listOfPoolHookedParticles = new Dictionary<int, ParticleData>();
+
     private void OnEnable()
     {
-        EndPlatformTrigger.OnFxSpawn += SpawnFx;
+        EndPlatformTrigger.OnFxSpawn += SpawnLevelCompleteFx;
         PlayerController.OnPlayerHooked += SpawnFromPool;
     }
 
     private void OnDisable()
     {
-        EndPlatformTrigger.OnFxSpawn -= SpawnFx;
+        EndPlatformTrigger.OnFxSpawn -= SpawnLevelCompleteFx;
         PlayerController.OnPlayerHooked -= SpawnFromPool;
-
-
     }
 
     private void Start()
+    {
+        Setup();
+    }
+
+    #region JumpFX
+    private void Setup()
     {
         if (m_ParticlesHolder == null)
         {
             m_ParticlesHolder = this.transform;
         }
-        Setup();
-    }
-    private void Setup()
-    {
-        for (int i = 0; i < MaxPrefabSpawnCount; i++)
+
+        for (int i = 0; i < maxPrefabCount; i++)
         {
             GameObject prefab  =  GameObject.Instantiate(m_FxConfig.m_HookedFxPrefab, m_ParticlesHolder);
             prefab.SetActive(false);
@@ -61,7 +62,7 @@ public class VFXManager : MonoBehaviour
         }
     }
 
-    void AddHookedParticleInList(int index, ParticleData particle )
+    private void AddHookedParticleInList(int index, ParticleData particle )
     {
         if (!listOfPoolHookedParticles.ContainsKey(index))
         {
@@ -69,16 +70,14 @@ public class VFXManager : MonoBehaviour
         }
     }
 
-    public ParticleData GetParticleByIndex(int index)
+    private ParticleData GetParticleByIndex(int index)
     {
         return listOfPoolHookedParticles[index];
     }
 
-    public void SpawnFromPool(Transform point)
+    private void SpawnFromPool(Transform point)
     {
         ParticleData data = GetParticleByIndex(GetCurrentIndex());
-
-       
 
         if (!data.IsParticlePlaying())
         {
@@ -93,19 +92,19 @@ public class VFXManager : MonoBehaviour
         Debug.Log("On hook triggerred");
     }
 
-    IEnumerator DisablePartilceOnComplete(ParticleData data)
+    private IEnumerator DisablePartilceOnComplete(ParticleData data)
     {
         yield return new WaitForSeconds(data.particle.main.duration);
         data.gameObject.SetActive(false);
         data.particle.Stop();
     }
-   
 
-    public int GetCurrentIndex()
+
+    private int GetCurrentIndex()
     {
         if (m_CurrentPoolIndex >= listOfPoolHookedParticles.Count - 1) 
         {
-            DeActvateEveryPartilce();
+            DeActvateEveryParticle();
             m_CurrentPoolIndex = 0;
 
             return m_CurrentPoolIndex;
@@ -118,7 +117,7 @@ public class VFXManager : MonoBehaviour
         return m_CurrentPoolIndex;
     }
 
-    public void DeActvateEveryPartilce()
+    private void DeActvateEveryParticle()
     {
         foreach (var item in listOfPoolHookedParticles)
         {
@@ -127,9 +126,11 @@ public class VFXManager : MonoBehaviour
             { item.Value.particle.Stop(); }
         }
     }
+    #endregion
 
 
-    private IEnumerator SpawnFxWithDelay(float delay, Transform point)
+    #region Level_CompleteFx
+    private IEnumerator SpawnLevelCompleteFxWithDelay(float delay, Transform point)
     {
         yield return new WaitForSeconds(delay);
 
@@ -141,10 +142,10 @@ public class VFXManager : MonoBehaviour
         }
        
     }
-    private void SpawnFx(Transform spawnPoint)
+    private void SpawnLevelCompleteFx(Transform spawnPoint)
     {
-        StartCoroutine(SpawnFxWithDelay(1.0f, spawnPoint));
+        StartCoroutine(SpawnLevelCompleteFxWithDelay(1.0f, spawnPoint));
     }
-
+    #endregion
 
 }

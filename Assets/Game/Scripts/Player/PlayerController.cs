@@ -45,12 +45,11 @@ public class PlayerController : MonoBehaviour
 
 
     [Header("Freeze States")]
-    [SerializeField] private bool isInsideBonFire;
     public EPlayerState m_CurrentPlayerState;
     private Coroutine FreezeCoroutine;
 
     [Header("Inputs")]
-    [SerializeField] private bool m_IsJumpKeyPressed = false;
+    [SerializeField] private bool m_IsJumpKeyPressed;
     [SerializeField] private bool restrictVerticalAxis;
     private Vector3 moveDirection;
 
@@ -60,13 +59,13 @@ public class PlayerController : MonoBehaviour
     {
         PlayerInputService.OnJumpPressed += OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased += OnJumpKeyRelease;
-        BonFireTrigger.OnTerminalTriggered += TerminalCollided;
+        TerminalTriggerBox.OnTerminalTriggered += TerminalCollided;
     }
     private void OnDisable()
     {
         PlayerInputService.OnJumpPressed -= OnJumpkeyPressed;
         PlayerInputService.OnJumpReleased -= OnJumpKeyRelease;
-        BonFireTrigger.OnTerminalTriggered -= TerminalCollided;
+        TerminalTriggerBox.OnTerminalTriggered -= TerminalCollided;
 
     }
     void Start()
@@ -105,8 +104,6 @@ public class PlayerController : MonoBehaviour
         CheckingHookingState();
         HandleMovement();
 
-     //   RotatePlayerTowardsWalls();
-
     }
 
     private void OnDrawGizmos()
@@ -116,9 +113,6 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawLine(m_PlayerView.m_GroundCheckTransform.position, m_PlayerView.m_GroundCheckTransform.position + Vector3.down * m_PlayerConfig.m_GroundCheckDistance);
 
         Gizmos.color = Color.green;
-
-        //Gizmos.DrawWireSphere(playerTansfom.position + playerTansfom.forward*100 , 5);
-
 
     }
 
@@ -142,14 +136,12 @@ public class PlayerController : MonoBehaviour
     void OnJumpkeyPressed()
     {
         m_IsJumpKeyPressed = true;
-        if (canHook)
+
+        // Checking if in air its
+        if (canHook && IsInAir())
         {
             m_CurrentHookState = EHookStates.HOOKING;
         }
-        //else
-        // {
-        // m_HookStates = EHookStates.None;
-        //  }
 
         if (CheckIsGrounded())
         {
@@ -160,6 +152,7 @@ public class PlayerController : MonoBehaviour
     void OnJumpKeyRelease()
     {
         m_IsJumpKeyPressed = false;
+
         if (isHooked)
         {
            m_CurrentHookState = EHookStates.NONE;
@@ -233,9 +226,10 @@ public class PlayerController : MonoBehaviour
 
 
  
+    
     private void AttachHook(PlatformView platform)
     {
-
+        // Setting postion snap to Platform's position
         playerTansfom.transform.position = hookTransform.transform.position;
         playerRigidbody.velocity = Vector3.zero;
         playerRigidbody.isKinematic = true;
@@ -255,8 +249,12 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    // Other method
     private void AttachHook2(PlatformView platform)
     {
+     
+        //Attaching the player as parent to platform
+        // This wont snap to position but hooks on the right spot when jump pressed.
         if (isHooked) 
         {
             return;
@@ -278,7 +276,24 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    // Player Model Rotation
+    void PlayerSkinRotation()
+    {
+        float horizontal = m_PlayerInputService.m_Horizontal;
+        float angle = horizontal * 90.0f;
+        float targetRotationY = 0.0f;
 
+        if (IsJumpKeyHeld())
+        {
+            targetRotationY = isHooked ? 180.0f : angle * -1.0f;
+        }
+        else
+        {
+            targetRotationY = (isGrounded || (IsInAir() && !isHooked && horizontal != 0)) ? angle * -1.0f : 180.0f;
+        }
+
+        m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotationY, 0);
+    }
     #endregion
 
 
@@ -310,6 +325,8 @@ public class PlayerController : MonoBehaviour
         m_CurrentHookState = EHookStates.NONE;
         DetachHook();
     }
+
+    
     public void DetachHook()
     {
         if (m_Platform !=null)
@@ -326,30 +343,12 @@ public class PlayerController : MonoBehaviour
     #endregion
 
 
-    void PlayerSkinRotation()
+    #region Terminal Collision
+    void TerminalCollided(bool isEntered)
     {
-        float horizontal = m_PlayerInputService.m_Horizontal;
-        float angle = horizontal * 90.0f;
-        float targetRotationY = 0.0f;  
+        m_CurrentPlayerState = isEntered ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE;
 
-        if (IsJumpKeyHeld())
-        {
-            targetRotationY = isHooked ? 180.0f : angle * -1.0f;
-        }
-        else
-        {
-            targetRotationY = (isGrounded || (IsInAir() && !isHooked && horizontal != 0)) ? angle * -1.0f : 180.0f;
-        }
-
-        m_PlayerView.m_Skin.rotation = Quaternion.Euler(0, targetRotationY, 0);
-}
-
-    #region Terminal
-    void TerminalCollided(bool isBonFire)
-    {
-        m_CurrentPlayerState = isBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE;
-
-        SetPlayerState(isBonFire ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
+        SetPlayerState(isEntered ? EPlayerState.NORMAL : EPlayerState.ENTER_SLOWSTATE);
     }
 
 
